@@ -1,60 +1,59 @@
-# Vendor-PGP Graph Frontend
+# TRINETRA — Frontend
 
-React dashboard for visualizing vendor and PGP key relationships using Cytoscape.js.
+Threat Intelligence Investigation Platform (React + Vite).
 
 ## Stack
 
-- React (Vite)
-- Cytoscape.js + react-cytoscapejs
-- Axios
-- Plain CSS
+- React 19 + Vite
+- React Router 7
+- Cytoscape.js (relationship graph)
+- Axios (single API instance in `src/services/api.js`)
 
-## Setup
+No Redux, no UI frameworks. All HTTP calls live in the API service.
+
+## Run
 
 ```bash
 npm install
-npm run dev
+npm run dev        # http://localhost:5173
 ```
 
-Frontend runs on Vite default URL and calls backend at `http://localhost:5000`.
+The frontend expects the Flask backend on `http://localhost:5000`
+(see `backend/README.md`). If it is unreachable, every page shows an
+explicit offline state with retry.
 
-## Backend Endpoints Used
+### Backend environment
 
-- `GET /graph`
-- `GET /stats`
-- `GET /vendor/<id>`
-- `GET /pgp/<id>`
-- `GET /search?q=`
+The backend needs MySQL credentials before `python app.py`:
 
-## Features
+```powershell
+$env:DB_PASSWORD="your_mysql_password"
+python app.py   # from backend/
+```
 
-- Full-screen graph visualization area with interactive pan, zoom, drag, and box selection
-- Layout switcher (`cose`, `breadthfirst`, `circle`, `grid`)
-- Node hover highlighting with neighbor focus
-- Node click details panel (vendor and PGP views)
-- Search suggestions with animated focus and zoom to selected node
-- Stats cards + graph metrics (components, density, average degree)
-- Graph controls: fit, reset zoom, center, refresh data, export PNG, fullscreen
-- Light and dark mode toggle
-- Backend connection error UI with retry
+## Endpoints consumed
 
-## Project Structure
+| Endpoint | Used for |
+|---|---|
+| `GET /` | Health check (topbar/sidebar status) |
+| `GET /graph` | Cytoscape graph, evidence rows, actor directory |
+| `GET /stats` | Dashboard statistic cards |
+| `GET /vendor/<id>` | Node details + actor profile |
+| `GET /pgp/<id>` | Node details |
+| `GET /search?q=` | Topbar search, investigation entity linking |
 
-```text
-src/
-	components/
-		GraphView.jsx
-		Sidebar.jsx
-		Topbar.jsx
-		SearchBar.jsx
-		StatsCard.jsx
-		Loading.jsx
-	hooks/
-		useDebounce.js
-	services/
-		api.js
-	styles/
-		graph.css
-	App.jsx
-	main.jsx
+## Data integrity rules
+
+- Only fields actually returned by the API are rendered.
+- Missing fields show "Not available from current intelligence source."
+- No fabricated confidence scores, timestamps, or threat classifications.
+- Graph-derived metrics are labeled separately from backend statistics.
+- Investigations workspace is session-local only (no persistence endpoint exists).
+- Login is a demo gate; no authentication endpoint exists yet.
+
+## Scripts
+
+```bash
+npm run lint    # oxlint
+npm run build   # production build to dist/
 ```
