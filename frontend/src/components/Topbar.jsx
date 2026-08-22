@@ -1,20 +1,18 @@
-import ConfidenceSlider from "./ConfidenceSlider";
+import React from "react";
 
 const Topbar = ({
   activeTab,
   onTabChange,
   layout,
   onLayoutChange,
-  confidenceThreshold,
-  onConfidenceChange,
   onFit,
   onResetZoom,
-  onCenter,
   onRefresh,
   onExport,
   onFullscreen,
   theme,
   onThemeToggle,
+  pendingSuggestionsCount = 0,
 }) => {
   return (
     <header className="topbar">
@@ -31,20 +29,32 @@ const Topbar = ({
         >
           🌐 Relationship Graph
         </button>
+
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === "review" ? "active" : ""}`}
+          onClick={() => onTabChange("review")}
+        >
+          ⚖️ Review Suggestions
+          {pendingSuggestionsCount > 0 && (
+            <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/30 text-amber-300 border border-amber-500/50">
+              {pendingSuggestionsCount}
+            </span>
+          )}
+        </button>
+
         <button
           type="button"
           className={`tab-btn ${activeTab === "analyzer" ? "active" : ""}`}
           onClick={() => onTabChange("analyzer")}
         >
-          🕵️ Analyze Identity
+          📥 Intelligence Studio
         </button>
       </div>
 
       <div className="topbar-controls">
         {activeTab === "graph" && (
           <>
-            <ConfidenceSlider value={confidenceThreshold} onChange={onConfidenceChange} />
-
             <select
               className="layout-select"
               value={layout}

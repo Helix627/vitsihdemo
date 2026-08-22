@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
+import AnalystReviewPanel from "./components/AnalystReviewPanel";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
@@ -33,12 +34,17 @@ const emptyGraph = {
   edges: [],
 };
 
-const computeGraphMetrics = (graph) => {
+const computeGraphMetrics = (graph, minConfidence = 0.0) => {
   const nodes = (graph.nodes || []).map((node) => node.data.id);
-  const edges = (graph.edges || []).map((edge) => [edge.data.source, edge.data.target]);
+  const edges = (graph.edges || [])
+    .filter((edge) => {
+      const weight = parseFloat(edge.data.confidence ?? edge.data.weight ?? 1.0);
+      return weight >= minConfidence;
+    })
+    .map((edge) => [edge.data.source, edge.data.target]);
 
   if (!nodes.length) {
-    return { connectedComponents: 0, density: "0.000", averageDegree: "0.00" };
+    return { connectedComponents: 0, density: "0.0000", averageDegree: "0.00", visibleEdges: 0 };
   }
 
   const adjacency = new Map(nodes.map((id) => [id, new Set()]));
@@ -68,18 +74,18 @@ const computeGraphMetrics = (graph) => {
 
   const nodeCount = nodes.length;
   const edgeCount = edges.length;
-  const averageDegree = ((2 * edgeCount) / nodeCount).toFixed(2);
+  const averageDegree = nodeCount > 0 ? ((2 * edgeCount) / nodeCount).toFixed(2) : "0.00";
   const density =
     nodeCount > 1 ? ((2 * edgeCount) / (nodeCount * (nodeCount - 1))).toFixed(4) : "0.0000";
 
-  return { connectedComponents, density, averageDegree };
+  return { connectedComponents, density, averageDegree, visibleEdges: edgeCount };
 };
 
 function App() {
   const [activeTab, setActiveTab] = useState("graph");
   const [graph, setGraph] = useState(emptyGraph);
   const [stats, setStats] = useState(DEFAULT_STATS);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
   const [layout, setLayout] = useState("cose");
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.0);
@@ -91,28 +97,33 @@ function App() {
   const [focusRequest, setFocusRequest] = useState(null);
   const [theme, setTheme] = useState("dark");
   const [cy, setCy] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const metrics = useMemo(() => computeGraphMetrics(graph), [graph]);
+  const metrics = useMemo(
+    () => computeGraphMetrics(graph, confidenceThreshold),
+    [graph, confidenceThreshold]
+  );
 
+  // Load complete graph data on initial mount or manual refresh
   const loadData = useCallback(async () => {
-    setLoading(true);
     setError("");
-
     try {
-      const [graphData, statsData] = await Promise.all([
-        fetchGraph(50, confidenceThreshold),
+      const [graphData, statsData, suggData] = await Promise.all([
+        fetchGraph(60, 0.0),
         fetchStats(),
+        fetch("/api/v1/identity/suggestions").then((r) => r.json()).catch(() => ({ suggestions: [] })),
       ]);
       setGraph(graphData);
       setStats(statsData);
+      setPendingCount(suggData.suggestions?.length || 0);
     } catch (requestError) {
       const message = requestError?.message || "Network request failed";
       setError(message);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
-  }, [confidenceThreshold]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -190,7 +201,26 @@ function App() {
     if (activeTab !== "graph") {
       setActiveTab("graph");
     }
-    setFocusRequest({ id: item.id, time: Date.now() });
+
+    // If node is not currently in cy elements, reload graph
+    if (cy && !cy.getElementById(item.id).length) {
+      try {
+        const graphData = await fetchGraph(80, 0.0);
+        setGraph(graphData);
+      } catch (err) {
+        console.error("Failed refreshing graph for searched node", err);
+      }
+    }
+
+    setFocusRequest({
+      id: item.id,
+      label: item.label,
+      type: item.type,
+      normalized_value: item.normalized_value,
+      vendor_id: item.vendor_id,
+      identity_id: item.identity_id,
+      time: Date.now(),
+    });
     await fetchNodeDetails(item);
   };
 
@@ -225,7 +255,7 @@ function App() {
     graphRoot.requestFullscreen();
   };
 
-  if (loading || error) {
+  if (initialLoading) {
     return <Loading error={error} onRetry={loadData} />;
   }
 
@@ -236,8 +266,6 @@ function App() {
         onTabChange={setActiveTab}
         layout={layout}
         onLayoutChange={setLayout}
-        confidenceThreshold={confidenceThreshold}
-        onConfidenceChange={setConfidenceThreshold}
         onFit={handleFit}
         onResetZoom={handleResetZoom}
         onRefresh={loadData}
@@ -245,6 +273,7 @@ function App() {
         onFullscreen={handleFullscreen}
         theme={theme}
         onThemeToggle={() => setTheme((state) => (state === "light" ? "dark" : "light"))}
+        pendingSuggestionsCount={pendingCount}
       />
 
       {activeTab === "graph" && (
@@ -257,12 +286,13 @@ function App() {
         />
       )}
 
-      {activeTab === "graph" ? (
+      {activeTab === "graph" && (
         <main className="graph-layout">
           <section className="graph-panel fade-in">
             <GraphView
               graph={graph}
               layout={layout}
+              confidenceThreshold={confidenceThreshold}
               onNodeClick={fetchNodeDetails}
               onCyReady={setCy}
               selectedNodeId={selectedNodeId}
@@ -270,11 +300,34 @@ function App() {
             />
           </section>
 
-          <Sidebar stats={stats} selectedData={selectedData} metrics={metrics} />
+          <Sidebar
+            stats={{ ...stats, edges: metrics.visibleEdges }}
+            selectedData={selectedData}
+            metrics={metrics}
+            onSelectNode={handleSuggestionSelect}
+          />
         </main>
-      ) : (
-        <main className="analyzer-view-wrap">
-          <IdentityAnalyzer onSelectVendor={(v) => console.log(v)} />
+      )}
+
+      {activeTab === "review" && (
+        <main className="analyzer-view-wrap fade-in">
+          <AnalystReviewPanel
+            onApproveSuccess={() => loadData()}
+            onRejectSuccess={() => loadData()}
+            onRefreshGraph={() => loadData()}
+          />
+        </main>
+      )}
+
+      {activeTab === "analyzer" && (
+        <main className="analyzer-view-wrap fade-in">
+          <IdentityAnalyzer
+            onSelectVendor={(v) => {
+              setActiveTab("graph");
+              handleSuggestionSelect({ label: v, id: v, type: "vendor" });
+            }}
+            onDataEvolved={() => loadData()}
+          />
         </main>
       )}
     </div>

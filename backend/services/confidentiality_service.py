@@ -80,6 +80,7 @@ class ConfidentialityService:
             "level": level,
             "badge": badge,
             "description": description,
+            "actions": actions,
             "recommended_actions": actions,
             "breakdown": breakdown,
             "raw_entities": entities,

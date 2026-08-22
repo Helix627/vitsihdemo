@@ -88,3 +88,51 @@ export const fetchByPath = async (path) => {
   const response = await api.get(path);
   return response.data;
 };
+
+export const previewDossierIntel = async (payload) => {
+  const response = await api.post("/analyst/preview", payload);
+  return response.data;
+};
+
+export const submitAnalystIntel = async (payload) => {
+  const response = await api.post("/analyst/submit", payload);
+  return response.data;
+};
+
+export const previewBulkDataset = async (payload) => {
+  const response = await api.post("/datasets/preview", payload);
+  return response.data;
+};
+
+export const importDataset = async (payload) => {
+  const response = await api.post("/datasets/import", payload);
+  return response.data;
+};
+
+export const fetchSuggestions = async (limit = 50, offset = 0) => {
+  const response = await api.get("/identity/suggestions", { params: { limit, offset } });
+  return response.data;
+};
+
+export const approveSuggestion = async (suggestionId, analystName = "Lead_Investigator", notes = "") => {
+  const response = await api.post("/identity/approve", {
+    suggestion_id: suggestionId,
+    analyst_name: analystName,
+    notes,
+  });
+  return response.data;
+};
+
+export const rejectSuggestion = async (suggestionId, analystName = "Lead_Investigator", notes = "") => {
+  const response = await api.post("/identity/reject", {
+    suggestion_id: suggestionId,
+    analyst_name: analystName,
+    notes,
+  });
+  return response.data;
+};
+
+export const fetchVendorProvenance = async (vendorId) => {
+  const response = await api.get(`/vendor/${vendorId}/provenance`);
+  return response.data;
+};

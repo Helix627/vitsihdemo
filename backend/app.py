@@ -5,6 +5,7 @@ from flask_cors import CORS
 
 from api.routes_analysis import analysis_bp
 from api.routes_entities import entities_bp
+from api.routes_evolution import evolution_bp
 from api.routes_graph import graph_bp
 from api.routes_resolution import resolution_bp
 from api.routes_search import search_bp
@@ -27,6 +28,7 @@ def create_app() -> Flask:
     app.register_blueprint(analysis_bp)
     app.register_blueprint(resolution_bp)
     app.register_blueprint(search_bp)
+    app.register_blueprint(evolution_bp)
 
     @app.route("/", methods=["GET"])
     def home():

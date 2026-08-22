@@ -34,6 +34,28 @@ class RelationshipRepository:
             return rows
 
     @staticmethod
+    def get_relationships_between(identity_ids: List[int]) -> List[Dict[str, Any]]:
+        """Retrieve all relationships where both endpoints belong to identity_ids."""
+        if not identity_ids:
+            return []
+        format_strings = ",".join(["%s"] * len(identity_ids))
+        query = f"""
+        SELECT r.*
+        FROM IdentityRelationships r
+        WHERE r.identity1_id IN ({format_strings}) AND r.identity2_id IN ({format_strings});
+        """
+        with get_db_cursor() as cursor:
+            cursor.execute(query, tuple(identity_ids) + tuple(identity_ids))
+            rows = cursor.fetchall()
+            for r in rows:
+                if isinstance(r.get("evidence"), str):
+                    try:
+                        r["evidence"] = json.loads(r["evidence"])
+                    except Exception:
+                        pass
+            return rows
+
+    @staticmethod
     def count() -> int:
         query = "SELECT COUNT(*) AS total FROM IdentityRelationships"
         with get_db_cursor() as cursor:

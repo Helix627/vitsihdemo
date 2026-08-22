@@ -1,6 +1,6 @@
 """Entities REST API Blueprints."""
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from database.repositories.identity_repo import IdentityRepository
 from database.repositories.relationship_repo import RelationshipRepository
 from database.repositories.vendor_repo import VendorRepository
@@ -32,7 +32,7 @@ def get_identity_details(identity_id: int):
 
 @entities_bp.route("/vendor/<int:vendor_id>", methods=["GET"])
 def get_vendor_details(vendor_id: int):
-    """Retrieve full details for a marketplace vendor with all linked identities."""
+    """Retrieve full details for a marketplace vendor with all linked identities and cross-market syndicates."""
     vendor = VendorRepository.get_by_id(vendor_id)
     if not vendor:
         return jsonify({"error": f"Vendor #{vendor_id} not found"}), 404
@@ -53,40 +53,61 @@ def get_vendor_details(vendor_id: int):
         elif itype == "bitcoin":
             grouped["bitcoin_wallets"].append(ident)
 
+    # Fetch cross-marketplace linked vendor personas
+    cross_market_accounts = VendorRepository.get_cross_market_links(vendor_id)
+
     return jsonify(
         {
             "vendor": vendor,
             "identities": identities,
             "grouped_identities": grouped,
-            "aliases": grouped["aliases"],
-            "usernames": grouped["usernames"],
-            "pgp_keys": grouped["pgp_keys"],
-            "emails": grouped["emails"],
-            "bitcoin_wallets": grouped["bitcoin_wallets"],
+            "cross_market_accounts": cross_market_accounts,
+            "cross_market_count": len(cross_market_accounts),
         }
     )
 
 
-@entities_bp.route("/node/<node_id>", methods=["GET"])
-def resolve_node(node_id: str):
-    """Universal polymorphic node detail resolver for Cytoscape clicks."""
-    if node_id.startswith("vendor_"):
-        try:
-            v_id = int(node_id.replace("vendor_", ""))
-            return get_vendor_details(v_id)
-        except ValueError:
-            pass
+@entities_bp.route("/cross-market-relations", methods=["GET"])
+def get_cross_market_relations():
+    """Retrieve all high-level cross-marketplace vendor relationships across Agora, ShadowBay, and NightMarket."""
+    limit = request.args.get("limit", default=50, type=int)
+    offset = request.args.get("offset", default=0, type=int)
 
-    if node_id.startswith("pgp_"):
-        try:
-            p_id = int(node_id.replace("pgp_", ""))
-            return get_identity_details(p_id)
-        except ValueError:
-            pass
+    query = """
+    SELECT v1.vendor_id AS agora_vendor_id, v1.user_name AS agora_username,
+           v2.vendor_id AS target_vendor_id, v2.user_name AS target_username,
+           v2.market_id AS target_market_id,
+           i.identity_type, i.value AS shared_credential,
+           gt.alias_mutation_type, gt.pgp_status, gt.wallet_status, gt.email_status
+    FROM vendoridentitymap vim1
+    JOIN vendors v1 ON vim1.vendor_id = v1.vendor_id AND v1.market_id = 1
+    JOIN vendoridentitymap vim2 ON vim1.identity_id = vim2.identity_id
+    JOIN vendors v2 ON vim2.vendor_id = v2.vendor_id AND v2.market_id IN (101, 102)
+    JOIN identities i ON vim1.identity_id = i.identity_id
+    LEFT JOIN ground_truth_vendor_migrations gt ON v2.vendor_id = gt.synthetic_vendor_id
+    ORDER BY v1.vendor_id ASC
+    LIMIT %s OFFSET %s;
+    """
+    from database.connection import get_db_cursor
+    with get_db_cursor() as cursor:
+        cursor.execute(query, (limit, offset))
+        rows = cursor.fetchall()
+        for r in rows:
+            r["target_marketplace"] = "ShadowBay" if r["target_market_id"] == 101 else "NightMarket"
 
-    # Generic string match
-    search_res = IdentityRepository.search_identities(node_id.split("_", 1)[-1], limit=1)
-    if search_res:
-        return get_identity_details(search_res[0]["identity_id"])
+        cursor.execute("""
+            SELECT COUNT(DISTINCT CONCAT(vim1.vendor_id, '-', vim2.vendor_id, '-', vim1.identity_id)) as total
+            FROM vendoridentitymap vim1
+            JOIN vendors v1 ON vim1.vendor_id = v1.vendor_id AND v1.market_id = 1
+            JOIN vendoridentitymap vim2 ON vim1.identity_id = vim2.identity_id
+            JOIN vendors v2 ON vim2.vendor_id = v2.vendor_id AND v2.market_id IN (101, 102);
+        """)
+        total_count = cursor.fetchone()["total"]
 
-    return jsonify({"node_id": node_id, "label": node_id, "type": "generic_node"})
+    return jsonify({
+        "relations": rows,
+        "count": len(rows),
+        "total": total_count,
+        "limit": limit,
+        "offset": offset,
+    })
