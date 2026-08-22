@@ -1,14 +1,5 @@
-"""Database connection utilities."""
+"""Database connection utilities (compatibility wrapper for core.database)."""
 
-import mysql.connector
-from mysql.connector import Error
+from core.database import get_connection, get_db_cursor, transaction
 
-from config import DB_CONFIG
-
-
-def get_connection():
-    """Create and return a MySQL connection."""
-    try:
-        return mysql.connector.connect(**DB_CONFIG)
-    except Error as exc:
-        raise RuntimeError(f"Failed to connect to MySQL: {exc}") from exc
+__all__ = ["get_connection", "get_db_cursor", "transaction"]

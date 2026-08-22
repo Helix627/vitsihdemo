@@ -5,12 +5,18 @@
   --text-secondary: #5f6c7b;
   --border-soft: #dbe4eb;
   --shadow-soft: 0 18px 32px rgba(41, 61, 89, 0.12);
-  --vendor: #4caf50;
-  --vendor-border: #2e7d32;
-  --pgp: #ff9800;
-  --pgp-border: #e65100;
-  --selected: #2196f3;
-  --edge: #bdbdbd;
+  --vendor: #10b981;
+  --vendor-border: #059669;
+  --alias: #10b981;
+  --alias-border: #059669;
+  --pgp: #f97316;
+  --pgp-border: #c2410c;
+  --email: #0284c7;
+  --email-border: #0369a1;
+  --bitcoin: #f59e0b;
+  --bitcoin-border: #b45309;
+  --selected: #2563eb;
+  --edge: #94a3b8;
 }
 
 * {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import GraphView from "./components/GraphView";
+import IdentityAnalyzer from "./components/IdentityAnalyzer";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
@@ -9,17 +10,22 @@ import useDebounce from "./hooks/useDebounce";
 import {
   fetchByPath,
   fetchGraph,
-  fetchPgpDetails,
+  fetchNodeDetailsById,
   fetchStats,
-  fetchVendorDetails,
   searchNodes,
 } from "./services/api";
 import "./styles/graph.css";
 
 const DEFAULT_STATS = {
+  aliases: 0,
   vendors: 0,
+  usernames: 0,
   pgp_keys: 0,
+  emails: 0,
+  bitcoin_wallets: 0,
   edges: 0,
+  total_nodes: 0,
+  communities_count: 0,
 };
 
 const emptyGraph = {
@@ -27,14 +33,9 @@ const emptyGraph = {
   edges: [],
 };
 
-const parseEntityId = (nodeId) => {
-  const parts = nodeId.split("_");
-  return Number(parts[1]);
-};
-
 const computeGraphMetrics = (graph) => {
-  const nodes = graph.nodes.map((node) => node.data.id);
-  const edges = graph.edges.map((edge) => [edge.data.source, edge.data.target]);
+  const nodes = (graph.nodes || []).map((node) => node.data.id);
+  const edges = (graph.edges || []).map((edge) => [edge.data.source, edge.data.target]);
 
   if (!nodes.length) {
     return { connectedComponents: 0, density: "0.000", averageDegree: "0.00" };
@@ -49,18 +50,13 @@ const computeGraphMetrics = (graph) => {
   let connectedComponents = 0;
   const visited = new Set();
   for (const node of nodes) {
-    if (visited.has(node)) {
-      continue;
-    }
+    if (visited.has(node)) continue;
     connectedComponents += 1;
     const stack = [node];
 
     while (stack.length) {
       const current = stack.pop();
-      if (!current || visited.has(current)) {
-        continue;
-      }
-
+      if (!current || visited.has(current)) continue;
       visited.add(current);
       adjacency.get(current)?.forEach((neighbor) => {
         if (!visited.has(neighbor)) {
@@ -74,26 +70,26 @@ const computeGraphMetrics = (graph) => {
   const edgeCount = edges.length;
   const averageDegree = ((2 * edgeCount) / nodeCount).toFixed(2);
   const density =
-    nodeCount > 1
-      ? ((2 * edgeCount) / (nodeCount * (nodeCount - 1))).toFixed(3)
-      : "0.000";
+    nodeCount > 1 ? ((2 * edgeCount) / (nodeCount * (nodeCount - 1))).toFixed(4) : "0.0000";
 
   return { connectedComponents, density, averageDegree };
 };
 
 function App() {
+  const [activeTab, setActiveTab] = useState("graph");
   const [graph, setGraph] = useState(emptyGraph);
   const [stats, setStats] = useState(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [layout, setLayout] = useState("cose");
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.0);
   const [selectedData, setSelectedData] = useState(null);
   const [selectedNodeId, setSelectedNodeId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [focusRequest, setFocusRequest] = useState(null);
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   const [cy, setCy] = useState(null);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -104,7 +100,10 @@ function App() {
     setError("");
 
     try {
-      const [graphData, statsData] = await Promise.all([fetchGraph(), fetchStats()]);
+      const [graphData, statsData] = await Promise.all([
+        fetchGraph(50, confidenceThreshold),
+        fetchStats(),
+      ]);
       setGraph(graphData);
       setStats(statsData);
     } catch (requestError) {
@@ -113,7 +112,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [confidenceThreshold]);
 
   useEffect(() => {
     loadData();
@@ -134,16 +133,28 @@ function App() {
       setIsSearching(true);
       try {
         const result = await searchNodes(query);
-        const vendorItems = (result.vendors || []).map((item) => ({
+        const aliasItems = (result.aliases || result.vendors || []).map((item) => ({
           ...item,
-          type: "vendor",
+          type: "alias",
+        }));
+        const userItems = (result.usernames || []).map((item) => ({
+          ...item,
+          type: "username",
         }));
         const pgpItems = (result.pgp_keys || []).map((item) => ({
           ...item,
           type: "pgp",
         }));
+        const emailItems = (result.emails || []).map((item) => ({
+          ...item,
+          type: "email",
+        }));
+        const btcItems = (result.bitcoin_wallets || []).map((item) => ({
+          ...item,
+          type: "bitcoin",
+        }));
 
-        setSuggestions([...vendorItems, ...pgpItems]);
+        setSuggestions([...aliasItems, ...userItems, ...pgpItems, ...emailItems, ...btcItems]);
       } catch {
         setSuggestions([]);
       } finally {
@@ -155,8 +166,7 @@ function App() {
   }, [debouncedSearch]);
 
   const fetchNodeDetails = useCallback(async (node) => {
-    const nodeType = node.type;
-
+    const nodeType = node.type || "vendor";
     setSelectedNodeId(node.id);
 
     try {
@@ -166,19 +176,10 @@ function App() {
         return;
       }
 
-      const entityId = parseEntityId(node.id);
-      if (Number.isNaN(entityId)) {
-        return;
-      }
-
-      if (nodeType === "vendor") {
-        const details = await fetchVendorDetails(entityId);
-        setSelectedData({ ...details, kind: "vendor" });
-      } else if (nodeType === "pgp") {
-        const details = await fetchPgpDetails(entityId);
-        setSelectedData({ ...details, kind: "pgp" });
-      }
-    } catch {
+      const details = await fetchNodeDetailsById(node.id);
+      setSelectedData({ ...details, kind: nodeType });
+    } catch (fetchError) {
+      console.error("Failed to load node details", fetchError);
       setSelectedData(null);
     }
   }, []);
@@ -186,55 +187,41 @@ function App() {
   const handleSuggestionSelect = async (item) => {
     setSearchQuery(item.label);
     setSuggestions([]);
+    if (activeTab !== "graph") {
+      setActiveTab("graph");
+    }
     setFocusRequest({ id: item.id, time: Date.now() });
     await fetchNodeDetails(item);
   };
 
   const handleFit = () => {
-    if (!cy) {
-      return;
-    }
-    cy.fit(cy.elements(), 50);
+    if (cy) cy.fit(cy.elements(), 50);
   };
 
   const handleResetZoom = () => {
-    if (!cy) {
-      return;
+    if (cy) {
+      cy.zoom(1);
+      cy.center();
     }
-    cy.zoom(1);
-    cy.center();
-  };
-
-  const handleCenter = () => {
-    if (!cy) {
-      return;
-    }
-    cy.center();
   };
 
   const handleExport = () => {
-    if (!cy) {
-      return;
-    }
-
-    const imageData = cy.png({ bg: "#ffffff", full: true, scale: 2 });
+    if (!cy) return;
+    const imageData = cy.png({ bg: "#0f172a", full: true, scale: 2 });
     const link = document.createElement("a");
     link.href = imageData;
-    link.download = "vendor-graph.png";
+    link.download = "identity-resolution-graph.png";
     link.click();
   };
 
   const handleFullscreen = () => {
     const graphRoot = document.querySelector(".graph-layout");
-    if (!graphRoot) {
-      return;
-    }
+    if (!graphRoot) return;
 
     if (document.fullscreenElement) {
       document.exitFullscreen();
       return;
     }
-
     graphRoot.requestFullscreen();
   };
 
@@ -245,11 +232,14 @@ function App() {
   return (
     <div className="app-shell">
       <Topbar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         layout={layout}
         onLayoutChange={setLayout}
+        confidenceThreshold={confidenceThreshold}
+        onConfidenceChange={setConfidenceThreshold}
         onFit={handleFit}
         onResetZoom={handleResetZoom}
-        onCenter={handleCenter}
         onRefresh={loadData}
         onExport={handleExport}
         onFullscreen={handleFullscreen}
@@ -257,28 +247,36 @@ function App() {
         onThemeToggle={() => setTheme((state) => (state === "light" ? "dark" : "light"))}
       />
 
-      <SearchBar
-        query={searchQuery}
-        onQueryChange={setSearchQuery}
-        suggestions={suggestions}
-        isSearching={isSearching}
-        onSelectSuggestion={handleSuggestionSelect}
-      />
+      {activeTab === "graph" && (
+        <SearchBar
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          suggestions={suggestions}
+          isSearching={isSearching}
+          onSelectSuggestion={handleSuggestionSelect}
+        />
+      )}
 
-      <main className="graph-layout">
-        <section className="graph-panel fade-in">
-          <GraphView
-            graph={graph}
-            layout={layout}
-            onNodeClick={fetchNodeDetails}
-            onCyReady={setCy}
-            selectedNodeId={selectedNodeId}
-            focusRequest={focusRequest}
-          />
-        </section>
+      {activeTab === "graph" ? (
+        <main className="graph-layout">
+          <section className="graph-panel fade-in">
+            <GraphView
+              graph={graph}
+              layout={layout}
+              onNodeClick={fetchNodeDetails}
+              onCyReady={setCy}
+              selectedNodeId={selectedNodeId}
+              focusRequest={focusRequest}
+            />
+          </section>
 
-        <Sidebar stats={stats} selectedData={selectedData} metrics={metrics} />
-      </main>
+          <Sidebar stats={stats} selectedData={selectedData} metrics={metrics} />
+        </main>
+      ) : (
+        <main className="analyzer-view-wrap">
+          <IdentityAnalyzer onSelectVendor={(v) => console.log(v)} />
+        </main>
+      )}
     </div>
   );
 }

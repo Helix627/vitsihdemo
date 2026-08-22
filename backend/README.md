@@ -77,53 +77,56 @@ You can still hardcode these values in `config.py`, but env vars are safer.
 ### GET /
 
 Returns:
-
 ```text
 Backend Running
 ```
 
 ### GET /graph
 
-Returns Cytoscape-compatible JSON:
-
-- `nodes`: vendor and PGP nodes
-- `edges`: vendor -> PGP relationships
-
-Node metadata includes:
-
-- `type`
-- `label`
-- `fingerprint` (PGP only)
-- `color`
-- `shape`
+Returns Cytoscape-compatible JSON with separated identifier nodes and alias nodes:
+- `nodes`: `alias`, `pgp`, `email`, `bitcoin`
+- `edges`: `uses_pgp`, `has_email`, `has_wallet`
 
 ### GET /stats
 
 Returns dynamically computed stats:
-
 ```json
 {
+  "aliases": 50,
   "vendors": 50,
-  "pgp_keys": 38,
-  "edges": 74
+  "pgp_keys": 44,
+  "emails": 40,
+  "bitcoin_wallets": 35,
+  "edges": 119,
+  "total_nodes": 169
 }
 ```
 
-(Counts depend on your data.)
+### GET /vendor/<id> (or /alias/<id>)
 
-### GET /vendor/<id>
-
-Returns one vendor and all associated PGP keys from the in-memory graph.
+Returns one vendor alias and all connected identifiers (PGP keys, emails, bitcoin wallets) and correlated aliases.
 
 ### GET /pgp/<id>
 
-Returns one PGP key and all associated vendors from the in-memory graph.
+Returns one PGP key and all associated vendor aliases.
+
+### GET /email/<email>
+
+Returns one Email address identifier and all associated vendor aliases.
+
+### GET /bitcoin/<wallet>
+
+Returns one Bitcoin wallet identifier and all associated vendor aliases.
+
+### GET /node/<node_id>
+
+Unified endpoint to fetch details of any node by its ID (`vendor_2`, `pgp_3109`, `email_xyz`, `btc_123`).
 
 ### GET /search?q=<text>
 
-Searches:
+Searches across:
+- Vendor aliases & usernames
+- PGP key aliases & fingerprints
+- Email addresses & domains
+- Bitcoin wallets & formats
 
-- vendor username
-- PGP alias
-
-Returns matching vendor and PGP nodes.

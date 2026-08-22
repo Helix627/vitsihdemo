@@ -1,68 +1,53 @@
-"""Flask API for vendor-PGP graph visualization."""
+"""Flask Application Factory and Server Entrypoint for CTI Platform."""
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_cors import CORS
 
+from api.routes_analysis import analysis_bp
+from api.routes_entities import entities_bp
+from api.routes_graph import graph_bp
+from api.routes_resolution import resolution_bp
+from api.routes_search import search_bp
 from config import DEBUG, SERVER_HOST, SERVER_PORT
-from graph_builder import (
-    get_graph_json,
-    get_pgp_details,
-    get_stats,
-    get_vendor_details,
-    load_graph,
-    search_graph,
-)
-
-app = Flask(__name__)
-CORS(app)
+from database.connection import init_connection_pool
+from core.logging import logger
+from graph.graph_engine import NetworkXGraphEngine
+from services.embedding_service import EmbeddingService
+from services.stylometric_service import StylometricEngine
 
 
-@app.route("/", methods=["GET"])
-def home():
-    """Health endpoint."""
-    return "Backend Running"
+def create_app() -> Flask:
+    """Assemble and configure the Flask REST application."""
+    app = Flask(__name__)
+    CORS(app)
+
+    # Register blueprints
+    app.register_blueprint(graph_bp)
+    app.register_blueprint(entities_bp)
+    app.register_blueprint(analysis_bp)
+    app.register_blueprint(resolution_bp)
+    app.register_blueprint(search_bp)
+
+    @app.route("/", methods=["GET"])
+    def home():
+        """Health check endpoint."""
+        return "Identity Resolution Backend Running"
+
+    return app
 
 
-@app.route("/graph", methods=["GET"])
-def graph():
-    """Return graph data in Cytoscape format."""
-    return jsonify(get_graph_json())
+app = create_app()
 
 
-@app.route("/stats", methods=["GET"])
-def stats():
-    """Return graph stats."""
-    return jsonify(get_stats())
-
-
-@app.route("/vendor/<int:vendor_id>", methods=["GET"])
-def vendor_details(vendor_id):
-    """Return one vendor and all associated PGP keys."""
-    data = get_vendor_details(vendor_id)
-    if not data:
-        return jsonify({"error": "Vendor not found in demo graph"}), 404
-
-    return jsonify(data)
-
-
-@app.route("/pgp/<int:pgp_id>", methods=["GET"])
-def pgp_details(pgp_id):
-    """Return one PGP key and all associated vendors."""
-    data = get_pgp_details(pgp_id)
-    if not data:
-        return jsonify({"error": "PGP key not found in demo graph"}), 404
-
-    return jsonify(data)
-
-
-@app.route("/search", methods=["GET"])
-def search():
-    """Search vendors by username or PGP keys by alias."""
-    query = request.args.get("q", "")
-    return jsonify(search_graph(query))
+def startup():
+    """Pre-flight warmup: initialize DB pool, build NetworkX graph, and load stylometric signatures."""
+    logger.info("Initializing CTI Platform backend services...")
+    init_connection_pool()
+    NetworkXGraphEngine.build_graph()
+    StylometricEngine.initialize_from_csv()
+    logger.info("CTI Platform backend initialization complete.")
 
 
 if __name__ == "__main__":
-    # Build and cache the graph once at startup.
-    load_graph()
+    startup()
     app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG)
