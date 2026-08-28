@@ -2,21 +2,53 @@
 -- Extended 3NF Graph-Oriented Database Schema for Dark Web Identity Resolution
 -- ==============================================================================
 
--- 1. Canonical Marketplace Vendors
+-- 1. Legacy source tables used by the import and migration workflow
 CREATE TABLE IF NOT EXISTS Vendors (
     vendor_id INT PRIMARY KEY AUTO_INCREMENT,
     user_name VARCHAR(255) NOT NULL,
     market_id INT DEFAULT NULL,
     link TEXT,
-    profile_text TEXT,
+    user_id INT DEFAULT NULL,
+    profile TEXT,
+    vendor_link TEXT,
+    added BIGINT DEFAULT NULL,
+    updated BIGINT DEFAULT NULL,
+    scraped BIGINT DEFAULT NULL,
+    imposter INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     KEY idx_vendor_username (user_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS Vendor_Profile (
+    vendor_id INT PRIMARY KEY,
+    alias VARCHAR(255),
+    username VARCHAR(255),
+    email VARCHAR(255) NULL,
+    bitcoin_wallet VARCHAR(64) NULL,
+    CONSTRAINT fk_vendor_profile_vendor
+        FOREIGN KEY (vendor_id) REFERENCES Vendors(vendor_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS Vendor_pgp_keys (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    alias VARCHAR(255) NOT NULL,
+    fingerprint_f VARCHAR(32) NOT NULL,
+    fingerprint VARCHAR(64) NOT NULL,
+    public_key LONGBLOB NOT NULL,
+    vendor_ids TEXT,
+    user_hash VARCHAR(255) DEFAULT NULL,
+    review_count INT DEFAULT 0,
+    star_rate DECIMAL(5,2) DEFAULT 0.00,
+    UNIQUE KEY uk_fingerprint (fingerprint),
+    KEY idx_alias (alias),
+    KEY idx_fingerprint_f (fingerprint_f)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Generic Normalized Digital Identities (First-Class Entities)
 CREATE TABLE IF NOT EXISTS Identities (
     identity_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    identity_type ENUM('alias', 'username', 'email', 'bitcoin', 'pgp', 'phone', 'marketplace', 'product', 'category', 'shipping_origin', 'shipping_destination') NOT NULL,
+    identity_type VARCHAR(64) NOT NULL,
     value TEXT NOT NULL,
     normalized_value VARCHAR(512) NOT NULL,
     metadata JSON DEFAULT NULL,
@@ -73,4 +105,77 @@ CREATE TABLE IF NOT EXISTS IdentityMerges (
     KEY idx_merge_merged (merged_identity_id),
     CONSTRAINT fk_merge_primary FOREIGN KEY (primary_identity_id) REFERENCES Identities(identity_id) ON DELETE CASCADE,
     CONSTRAINT fk_merge_merged FOREIGN KEY (merged_identity_id) REFERENCES Identities(identity_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. Probabilistic identity suggestions awaiting analyst review
+CREATE TABLE IF NOT EXISTS identity_suggestions (
+    suggestion_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    source_vendor_id INT NULL,
+    target_vendor_id INT NULL,
+    source_username VARCHAR(255) NOT NULL,
+    target_username VARCHAR(255) NULL,
+    confidence DECIMAL(5,4) NOT NULL,
+    decision_label VARCHAR(32) NOT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    similarity_breakdown JSON NULL,
+    suggested_reason TEXT NULL,
+    reviewed_at DATETIME NULL,
+    reviewed_by VARCHAR(255) NULL,
+    review_notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_suggestions_status (status),
+    KEY idx_suggestions_confidence (confidence),
+    KEY idx_suggestions_source_vendor (source_vendor_id),
+    KEY idx_suggestions_target_vendor (target_vendor_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. Analyst decisions used for review history and future supervised learning
+CREATE TABLE IF NOT EXISTS analyst_decisions_log (
+    decision_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    suggestion_id BIGINT NOT NULL,
+    source_vendor VARCHAR(255) NULL,
+    target_vendor VARCHAR(255) NULL,
+    decision ENUM('APPROVED', 'REJECTED') NOT NULL,
+    confidence DECIMAL(5,4) NULL,
+    features_json JSON NULL,
+    analyst_id VARCHAR(255) NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_decision_suggestion (suggestion_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. Chronological evidence and confidence history
+CREATE TABLE IF NOT EXISTS evidence_provenance (
+    provenance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    target_type VARCHAR(64) NOT NULL,
+    target_id BIGINT NOT NULL,
+    source_dataset VARCHAR(255) NULL,
+    evidence_type VARCHAR(255) NOT NULL,
+    evidence_payload JSON NULL,
+    confidence_before DECIMAL(5,4) NULL,
+    confidence_after DECIMAL(5,4) NULL,
+    analyst_id VARCHAR(255) NULL,
+    reason TEXT NULL,
+    verification_status VARCHAR(64) NOT NULL DEFAULT 'verified',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_provenance_target (target_type, target_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 9. Ground-truth mappings produced by the optional synthetic marketplace generator
+CREATE TABLE IF NOT EXISTS ground_truth_vendor_migrations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    agora_vendor_id INT NULL,
+    agora_username VARCHAR(255) NULL,
+    target_marketplace VARCHAR(64) NOT NULL,
+    synthetic_vendor_id INT NOT NULL,
+    synthetic_username VARCHAR(255) NOT NULL,
+    synthetic_alias VARCHAR(255) NOT NULL,
+    alias_mutation_type VARCHAR(64) NOT NULL,
+    pgp_status VARCHAR(32) NOT NULL,
+    wallet_status VARCHAR(32) NOT NULL,
+    email_status VARCHAR(32) NOT NULL,
+    listing_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_gt_agora (agora_vendor_id),
+    KEY idx_gt_synth (synthetic_vendor_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

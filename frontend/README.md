@@ -5,11 +5,13 @@ React dashboard for visualizing vendor and PGP key relationships using Cytoscape
 ## Stack
 
 - React (Vite)
-- Cytoscape.js + react-cytoscapejs
+- Cytoscape.js
 - Axios
 - Plain CSS
 
 ## Setup
+
+For a complete fresh-clone setup, use the root [README.md](../README.md). The commands below are for the frontend only.
 
 ```bash
 npm install

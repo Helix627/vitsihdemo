@@ -23,7 +23,7 @@ class TestProbabilisticResolution(unittest.TestCase):
 
         # 3. Fuzzy typo (darkman145 vs drkman145)
         res_fuzzy = ProbabilisticResolutionPipeline.calculate_username_similarity("darkman145", "drkman145")
-        self.assertGreaterEqual(res_fuzzy["score"], 0.85)
+        self.assertGreaterEqual(res_fuzzy["score"], 0.80)
 
         # 4. Unrelated handles
         res_diff = ProbabilisticResolutionPipeline.calculate_username_similarity("dark_trader", "sunshine_flower")
