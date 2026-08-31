@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
 import AnalystReviewPanel from "./components/AnalystReviewPanel";
+import InfrastructureDashboard from "./components/InfrastructureDashboard";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
@@ -305,6 +306,26 @@ function App() {
             selectedData={selectedData}
             metrics={metrics}
             onSelectNode={handleSuggestionSelect}
+          />
+        </main>
+      )}
+
+      {activeTab === "infrastructure" && (
+        <main className="analyzer-view-wrap fade-in">
+          <InfrastructureDashboard
+            onSelectVendor={(v) => {
+              setActiveTab("graph");
+              handleSuggestionSelect({ label: v, id: v, type: "vendor" });
+            }}
+            onViewInGraph={async (nodeId, vendorName) => {
+              setActiveTab("graph");
+              if (vendorName) {
+                handleSuggestionSelect({ label: vendorName, id: nodeId, type: "onion" });
+              } else {
+                setFocusRequest({ id: nodeId, time: Date.now() });
+              }
+            }}
+            onRefreshGraph={() => loadData()}
           />
         </main>
       )}

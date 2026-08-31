@@ -136,3 +136,27 @@ export const fetchVendorProvenance = async (vendorId) => {
   const response = await api.get(`/vendor/${vendorId}/provenance`);
   return response.data;
 };
+
+export const fetchInfrastructureServices = async (limit = 50, offset = 0) => {
+  const response = await api.get("/api/v1/infrastructure/services", {
+    params: { limit, offset },
+  });
+  return response.data;
+};
+
+export const fetchInfrastructureDetail = async (serviceId) => {
+  const response = await api.get(`/api/v1/infrastructure/service/${serviceId}`);
+  return response.data;
+};
+
+export const correlateInfrastructure = async (query) => {
+  const response = await api.get("/api/v1/infrastructure/correlate", {
+    params: { q: query },
+  });
+  return response.data;
+};
+
+export const scanInfrastructure = async (payload) => {
+  const response = await api.post("/api/v1/infrastructure/scan", payload);
+  return response.data;
+};

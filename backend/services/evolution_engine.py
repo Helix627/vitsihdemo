@@ -199,11 +199,23 @@ class EvolutionEngine:
                         exact_match_reason = f"Exact {itype.upper()} Match ({row['value']}) with existing Vendor #{row['vendor_id']} ({row['user_name']})"
                         break
 
+        # Check for Explicit Analyst Direct Override Merge
+        if not matched_vendor_id and payload.get("force_merge"):
+            target_v_hint = payload.get("target_vendor_id") or payload.get("target_vendor")
+            if target_v_hint:
+                if str(target_v_hint).isdigit():
+                    v_obj = VendorRepository.get_vendor_by_id(int(target_v_hint))
+                else:
+                    v_obj = VendorRepository.get_by_username(str(target_v_hint))
+                if v_obj:
+                    matched_vendor_id = v_obj["vendor_id"]
+                    exact_match_reason = f"Analyst Direct Override Merge with Vendor #{v_obj['vendor_id']} ({v_obj['user_name']})"
+
         # ------------------------------------------------------------------
         # Branch A: Exact Match Found -> Stage 5 Evolution (Enrich Existing)
         # ------------------------------------------------------------------
         if matched_vendor_id is not None:
-            logger.info("Deterministic match found! Enriching existing Vendor #%d (%s)...", matched_vendor_id, exact_match_reason)
+            logger.info("Deterministic match / Analyst override found! Enriching existing Vendor #%d (%s)...", matched_vendor_id, exact_match_reason)
             new_nodes_created = 0
             existing_nodes_updated = 0
             relationships_created = 0

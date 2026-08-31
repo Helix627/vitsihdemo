@@ -30,6 +30,7 @@ class NetworkXGraphEngine:
         "discord": {"color": "#6366F1", "shape": "round-rectangle", "label": "Discord Tag"},
         "forum_handle": {"color": "#64748B", "shape": "hexagon", "label": "Forum Account"},
         "onion": {"color": "#D946EF", "shape": "barrel", "label": "Onion Hidden Service"},
+        "origin_ip": {"color": "#EF4444", "shape": "round-rectangle", "label": "Clearnet Origin IP"},
         "marketplace": {"color": "#EC4899", "shape": "octagon", "label": "Marketplace"},
         "listings": {"color": "#64748B", "shape": "rectangle", "label": "Listing"},
         "listing_url": {"color": "#475569", "shape": "rectangle", "label": "Listing URL"},
@@ -191,6 +192,60 @@ class NetworkXGraphEngine:
                             decision_label=sugg["decision_label"],
                             status="PENDING",
                         )
+
+            # 6. Add Tor Hidden Services & Clearnet Origin IP Attribution Nodes
+            cursor.execute(
+                """
+                SELECT 
+                    os.service_id, os.onion_address, os.title, os.server_banner,
+                    os.discovered_origin_ip, os.attribution_confidence, os.threat_level,
+                    vim.vendor_id
+                FROM OnionServices os
+                LEFT JOIN VendorInfrastructureMap vim ON os.service_id = vim.service_id
+                LIMIT 200;
+                """
+            )
+            onion_rows = cursor.fetchall()
+            for row in onion_rows:
+                s_id = row["service_id"]
+                onion_addr = row["onion_address"]
+                onion_node_id = f"onion_{s_id}"
+                disp_onion = f"{onion_addr[:10]}...onion" if len(onion_addr) > 16 else onion_addr
+                conf = float(row.get("attribution_confidence") or 0.0)
+                origin_ip = row.get("discovered_origin_ip")
+
+                G.add_node(
+                    onion_node_id,
+                    label=disp_onion,
+                    full_address=onion_addr,
+                    title=row.get("title") or "Tor Hidden Service",
+                    type="onion",
+                    color=cls.NODE_PALETTE["onion"]["color"],
+                    shape=cls.NODE_PALETTE["onion"]["shape"],
+                    service_id=s_id,
+                    attribution_confidence=conf,
+                    threat_level=row.get("threat_level") or "SUSPECTED",
+                    detail_url=f"/api/v1/infrastructure/service/{s_id}",
+                )
+
+                # Link to Vendor if present
+                v_id = row.get("vendor_id")
+                if v_id and G.has_node(f"vendor_{v_id}"):
+                    G.add_edge(f"vendor_{v_id}", onion_node_id, relation="HOSTED_ON", type="INFRASTRUCTURE", weight=conf)
+
+                # Add Clearnet Origin IP Node & Edge
+                if origin_ip:
+                    origin_node_id = f"origin_{origin_ip.replace('.', '_')}"
+                    if not G.has_node(origin_node_id):
+                        G.add_node(
+                            origin_node_id,
+                            label=f"ORIGIN: {origin_ip}",
+                            clearnet_ip=origin_ip,
+                            type="origin_ip",
+                            color=cls.NODE_PALETTE["origin_ip"]["color"],
+                            shape=cls.NODE_PALETTE["origin_ip"]["shape"],
+                        )
+                    G.add_edge(onion_node_id, origin_node_id, relation="RESOLVES_TO_ORIGIN", type="ATTRIBUTION", weight=conf, confidence=conf)
 
         logger.info("Knowledge Graph constructed: %d nodes, %d edges.", G.number_of_nodes(), G.number_of_edges())
         cls._GRAPH = G

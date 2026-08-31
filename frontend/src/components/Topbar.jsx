@@ -32,6 +32,14 @@ const Topbar = ({
 
         <button
           type="button"
+          className={`tab-btn ${activeTab === "infrastructure" ? "active" : ""}`}
+          onClick={() => onTabChange("infrastructure")}
+        >
+          🛡️ Tor Infrastructure & Attribution
+        </button>
+
+        <button
+          type="button"
           className={`tab-btn ${activeTab === "review" ? "active" : ""}`}
           onClick={() => onTabChange("review")}
         >

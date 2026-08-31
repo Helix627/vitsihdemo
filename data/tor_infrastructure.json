@@ -1,0 +1,267 @@
+[
+  {
+    "onion_address": "silkroad3vsnk5m7y2x7e6k25v4y6c4p2z5y3v7b2n9m4k8x1a2b3c4d5.onion",
+    "title": "SilkRoad 3.1 Reloaded - Darknet Marketplace",
+    "server_banner": "Apache/2.4.41 (Ubuntu) OpenSSL/1.1.1f",
+    "status_page_exposed": true,
+    "ssl_enabled": true,
+    "favicon_hash": "-1392847291",
+    "discovered_origin_ip": "185.220.101.5",
+    "attribution_confidence": 0.9850,
+    "threat_level": "CONFIRMED",
+    "linked_vendor_id": 1,
+    "linked_vendor_name": "Mike",
+    "indicators": [
+      {
+        "type": "SERVER_STATUS",
+        "value": "Apache Server Status at localhost (Port 80) - Uptime: 42 days 6 hours, Total Accesses: 1849202, VirtualHost: silkroad3.ops-direct.net (185.220.101.5)",
+        "clearnet_ip": "185.220.101.5",
+        "clearnet_domain": "silkroad3.ops-direct.net",
+        "confidence_score": 0.9900,
+        "asn": "AS200019",
+        "isp": "Alexhost SRL",
+        "country": "Moldova",
+        "evidence": {
+          "vhost_leaked": "silkroad3.ops-direct.net",
+          "server_admin": "admin@ops-direct.net",
+          "server_version": "Apache/2.4.41 (Ubuntu)",
+          "active_workers": 18,
+          "exposed_path": "/server-status?auto"
+        }
+      },
+      {
+        "type": "SSL_SAN",
+        "value": "CN=silkroad-portal.net, SAN=DNS:silkroad-portal.net, DNS:api.ops-direct.net, DNS:silkroad3vsnk5m7y2x7e6k25v4y6c4p2z5y3v7b2n9m4k8x1a2b3c4d5.onion",
+        "clearnet_ip": "185.220.101.5",
+        "clearnet_domain": "silkroad-portal.net",
+        "confidence_score": 0.9800,
+        "asn": "AS200019",
+        "isp": "Alexhost SRL",
+        "country": "Moldova",
+        "evidence": {
+          "sha256_fingerprint": "7D29F4E8B1C3A5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0",
+          "issuer": "Let's Encrypt Authority X3",
+          "valid_from": "2024-01-10T00:00:00Z",
+          "valid_to": "2026-04-10T23:59:59Z"
+        }
+      },
+      {
+        "type": "FAVICON_MMH3",
+        "value": "MurmurHash3: -1392847291",
+        "clearnet_ip": "185.220.101.5",
+        "clearnet_domain": "ops-direct.net",
+        "confidence_score": 0.9200,
+        "asn": "AS200019",
+        "isp": "Alexhost SRL",
+        "country": "Moldova",
+        "evidence": {
+          "shodan_query": "http.favicon.hash:-1392847291",
+          "censys_fingerprint": "services.http.response.favicons.hash:-1392847291"
+        }
+      }
+    ]
+  },
+  {
+    "onion_address": "shadowbay4m3k9l2p7x5c1v8b4n6m3k1l9p8x7c6v5b4n3m2k1l0p9x8c7.onion",
+    "title": "ShadowBay Syndicate Central Hub",
+    "server_banner": "nginx/1.18.0 (Ubuntu)",
+    "status_page_exposed": false,
+    "ssl_enabled": true,
+    "favicon_hash": "847291038",
+    "discovered_origin_ip": "91.215.85.17",
+    "attribution_confidence": 0.9520,
+    "threat_level": "CONFIRMED",
+    "linked_vendor_id": 2,
+    "linked_vendor_name": "MagicHat",
+    "indicators": [
+      {
+        "type": "SSL_SAN",
+        "value": "CN=shadowbay-market.su, SAN=DNS:shadowbay-market.su, DNS:api.shadowbay-cluster.com, DNS:shadowbay4m3k9l2p7x5c1v8b4n6m3k1l9p8x7c6v5b4n3m2k1l0p9x8c7.onion",
+        "clearnet_ip": "91.215.85.17",
+        "clearnet_domain": "api.shadowbay-cluster.com",
+        "confidence_score": 0.9700,
+        "asn": "AS49981",
+        "isp": "WorldStream B.V.",
+        "country": "Netherlands",
+        "evidence": {
+          "sha256_fingerprint": "3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2B3C4D",
+          "issuer": "ZeroSSL RSA Domain Secure Site CA",
+          "san_entries": ["shadowbay-market.su", "api.shadowbay-cluster.com"]
+        }
+      },
+      {
+        "type": "ETAG",
+        "value": "W/\"602a8b9c-148c\"",
+        "clearnet_ip": "91.215.85.17",
+        "clearnet_domain": "shadowbay-market.su",
+        "confidence_score": 0.9100,
+        "asn": "AS49981",
+        "isp": "WorldStream B.V.",
+        "country": "Netherlands",
+        "evidence": {
+          "matching_resource": "/static/css/theme-darknet-v3.min.css",
+          "etag_header": "W/\"602a8b9c-148c\""
+        }
+      }
+    ]
+  },
+  {
+    "onion_address": "dreadforum7v9k2x4c6p1l3m8b5n0q9w8e7r6t5y4u3i2o1p0a9s8d7f6g.onion",
+    "title": "Dread Underground Threat Intelligence Forum Mirror",
+    "server_banner": "Apache/2.4.52 (Debian)",
+    "status_page_exposed": true,
+    "ssl_enabled": false,
+    "favicon_hash": "-2048591823",
+    "discovered_origin_ip": "194.26.29.112",
+    "attribution_confidence": 0.9400,
+    "threat_level": "CONFIRMED",
+    "linked_vendor_id": 3,
+    "linked_vendor_name": "Dr-Green",
+    "indicators": [
+      {
+        "type": "SERVER_STATUS",
+        "value": "Apache mod_status exposed at /server-status - Server Version: Apache/2.4.52 (Debian) mod_wsgi/4.9.0 Python/3.10 - Origin: 194.26.29.112",
+        "clearnet_ip": "194.26.29.112",
+        "clearnet_domain": "dread-node02.bulletproof-host.ru",
+        "confidence_score": 0.9600,
+        "asn": "AS58224",
+        "isp": "Iran Telecommunication Company / Offshore Transit",
+        "country": "Seychelles",
+        "evidence": {
+          "cpu_load": "0.14 0.22 0.18",
+          "total_traffic": "4.2 GB",
+          "uptime_seconds": 1284920,
+          "virtual_host": "dread-node02.bulletproof-host.ru"
+        }
+      },
+      {
+        "type": "FAVICON_MMH3",
+        "value": "MurmurHash3: -2048591823",
+        "clearnet_ip": "194.26.29.112",
+        "clearnet_domain": "dread-node02.bulletproof-host.ru",
+        "confidence_score": 0.8900,
+        "asn": "AS58224",
+        "isp": "Offshore Transit",
+        "country": "Seychelles",
+        "evidence": {
+          "shodan_query": "http.favicon.hash:-2048591823"
+        }
+      }
+    ]
+  },
+  {
+    "onion_address": "hydraclone9x4c2v7b5n1m3k8l6p0q9w8e7r6t5y4u3i2o1p0a9s8d7f6g.onion",
+    "title": "Hydra Automated Dispatch & Dead-Drop Portal",
+    "server_banner": "OpenResty/1.19.9.1",
+    "status_page_exposed": false,
+    "ssl_enabled": true,
+    "favicon_hash": "492019482",
+    "discovered_origin_ip": "193.106.191.24",
+    "attribution_confidence": 0.8850,
+    "threat_level": "HIGH_PROBABILITY",
+    "linked_vendor_id": 4,
+    "linked_vendor_name": "Caligirl",
+    "indicators": [
+      {
+        "type": "HEADER_BANNER",
+        "value": "X-Backend-Node: hydra-core-fra01, X-Powered-By: LuaJIT-2.1.0",
+        "clearnet_ip": "193.106.191.24",
+        "clearnet_domain": "edge01.hydra-ops.is",
+        "confidence_score": 0.8700,
+        "asn": "AS44034",
+        "isp": "FLOKINET LTD",
+        "country": "Iceland",
+        "evidence": {
+          "unique_header": "X-Backend-Node: hydra-core-fra01",
+          "server_token": "OpenResty/1.19.9.1"
+        }
+      },
+      {
+        "type": "SSL_SAN",
+        "value": "CN=edge01.hydra-ops.is, SAN=DNS:edge01.hydra-ops.is, DNS:vpn-portal.hydra-ops.is",
+        "clearnet_ip": "193.106.191.24",
+        "clearnet_domain": "edge01.hydra-ops.is",
+        "confidence_score": 0.9000,
+        "asn": "AS44034",
+        "isp": "FLOKINET LTD",
+        "country": "Iceland",
+        "evidence": {
+          "sha256_fingerprint": "9F8E7D6C5B4A3F2E1D0C9B8A7F6E5D4C3B2A1F0E9D8C7B6A5F4E3D2C1B0A9F8E",
+          "issuer": "DigiCert Global Root CA"
+        }
+      }
+    ]
+  },
+  {
+    "onion_address": "alphabayrelic2x7c4v9b1n3m5k8l0p6q8w4e2r1t9y7u5i3o0p8a6s4d.onion",
+    "title": "AlphaBay Marketplace Decentralized Mirror",
+    "server_banner": "Apache/2.4.29 (Ubuntu)",
+    "status_page_exposed": true,
+    "ssl_enabled": false,
+    "favicon_hash": "194820194",
+    "discovered_origin_ip": "185.165.170.82",
+    "attribution_confidence": 0.9650,
+    "threat_level": "CONFIRMED",
+    "linked_vendor_id": 5,
+    "linked_vendor_name": "T5",
+    "indicators": [
+      {
+        "type": "SERVER_STATUS",
+        "value": "Apache mod_status public page at /server-status - Leaked Clearnet Host: 185.165.170.82 (alphabay-relic-backend.ch)",
+        "clearnet_ip": "185.165.170.82",
+        "clearnet_domain": "alphabay-relic-backend.ch",
+        "confidence_score": 0.9800,
+        "asn": "AS51167",
+        "isp": "Contabo GmbH",
+        "country": "Germany",
+        "evidence": {
+          "server_status_title": "Apache Server Status for alphabay-relic-backend.ch (via 127.0.0.1)",
+          "current_requests": 24,
+          "exposed_endpoints": ["/api/v2/catalog", "/auth/login"]
+        }
+      }
+    ]
+  },
+  {
+    "onion_address": "darkodeescrow3x8c1v4b6n9m2k7l5p0q8w3e1r9t6y4u2i0o7p5a3s1d.onion",
+    "title": "Darkode Multivendor Escrow Service",
+    "server_banner": "nginx/1.22.1",
+    "status_page_exposed": false,
+    "ssl_enabled": true,
+    "favicon_hash": "-774829103",
+    "discovered_origin_ip": "45.142.122.99",
+    "attribution_confidence": 0.9150,
+    "threat_level": "CONFIRMED",
+    "linked_vendor_id": 6,
+    "linked_vendor_name": "MollyStore",
+    "indicators": [
+      {
+        "type": "SSL_SAN",
+        "value": "CN=darkode-escrow.biz, SAN=DNS:darkode-escrow.biz, DNS:admin.darkode-escrow.biz",
+        "clearnet_ip": "45.142.122.99",
+        "clearnet_domain": "darkode-escrow.biz",
+        "confidence_score": 0.9400,
+        "asn": "AS208046",
+        "isp": "Stark Industries Solutions LTD",
+        "country": "Cyprus",
+        "evidence": {
+          "sha256_fingerprint": "1A2B3C4D5E6F708192A3B4C5D6E7F8091A2B3C4D5E6F708192A3B4C5D6E7F809",
+          "subject": "CN=darkode-escrow.biz"
+        }
+      },
+      {
+        "type": "FAVICON_MMH3",
+        "value": "MurmurHash3: -774829103",
+        "clearnet_ip": "45.142.122.99",
+        "clearnet_domain": "darkode-escrow.biz",
+        "confidence_score": 0.8800,
+        "asn": "AS208046",
+        "isp": "Stark Industries Solutions LTD",
+        "country": "Cyprus",
+        "evidence": {
+          "shodan_query": "http.favicon.hash:-774829103"
+        }
+      }
+    ]
+  }
+]

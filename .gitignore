@@ -6,3 +6,7 @@ frontend/dist/
 .pytest_cache/
 .coverage
 *.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
