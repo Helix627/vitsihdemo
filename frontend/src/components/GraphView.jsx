@@ -62,13 +62,13 @@ const getLayoutConfig = (layoutName) => {
       fit: true,
       padding: 45,
       randomize: false,
-      nodeRepulsion: (node) => (node.data("type") === "marketplace" ? 900000 : 500000),
+      nodeRepulsion: (node) => (node.data("type") === "marketplace" ? 600000 : 350000),
       idealEdgeLength: (edge) => (edge.data("relation") === "LISTED_ON" ? 100 : 55),
       edgeElasticity: () => 40,
       nestingFactor: 1.2,
-      gravity: 0.25,
-      numIter: 1000,
-      coolingFactor: 0.99,
+      gravity: 0.3,
+      numIter: 400,        // was 1000 — halved for faster convergence
+      coolingFactor: 0.95,
       minTemp: 1.0,
     };
   }
@@ -117,8 +117,6 @@ const GraphView = ({
             height: "44px",
             "border-width": 2,
             "border-color": "#ffffff",
-            "transition-property": "background-color, line-color, target-arrow-color, opacity, border-width",
-            "transition-duration": "0.2s",
           },
         },
         ...NODE_STYLES,

@@ -1,6 +1,6 @@
 """Graph REST API Blueprints."""
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from graph.graph_algorithms import GraphAnalytics
 from graph.graph_engine import NetworkXGraphEngine
 from graph.serializers import CytoscapeSerializer
@@ -20,45 +20,22 @@ def get_graph():
         NetworkXGraphEngine.build_graph(vendor_limit=limit)
 
     cytoscape_data = CytoscapeSerializer.to_cytoscape_json(min_confidence=min_confidence)
-    return jsonify(cytoscape_data)
+    resp = make_response(jsonify(cytoscape_data))
+    # Allow browser / proxy to cache graph for 30 seconds
+    resp.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
+    return resp
 
 
 @graph_bp.route("/statistics", methods=["GET"])
 @graph_bp.route("/stats", methods=["GET"])
 def get_statistics():
-    """Returns aggregate graph topology metrics and entity distribution."""
-    G = NetworkXGraphEngine.get_graph()
-
-    type_counts = {}
-    for _, data in G.nodes(data=True):
-        ntype = data.get("type", "unknown")
-        type_counts[ntype] = type_counts.get(ntype, 0) + 1
-
-    node_count = G.number_of_nodes()
-    edge_count = G.number_of_edges()
-    density = nx.density(G) if node_count > 1 else 0.0
-
-    components = nx.number_connected_components(G) if node_count > 0 else 0
-    top_central = GraphAnalytics.get_centrality_metrics(top_k=5)
-    communities = GraphAnalytics.get_community_detection()
-
-    return jsonify(
-        {
-            "total_nodes": node_count,
-            "edges": edge_count,
-            "connected_components": components,
-            "density": f"{density:.4f}",
-            "communities_count": communities["communities_count"],
-            "top_central_nodes": top_central,
-            "type_counts": type_counts,
-            "aliases": type_counts.get("alias", 0) + type_counts.get("vendor", 0),
-            "vendors": type_counts.get("vendor", 0),
-            "usernames": type_counts.get("username", 0),
-            "pgp_keys": type_counts.get("pgp", 0),
-            "emails": type_counts.get("email", 0),
-            "bitcoin_wallets": type_counts.get("bitcoin", 0),
-        }
-    )
+    """Returns aggregate graph topology metrics and entity distribution.
+    Results are computed once and cached for 60 s in the analytics module.
+    """
+    stats = GraphAnalytics.get_full_stats_cached()
+    resp = make_response(jsonify(stats))
+    resp.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=120"
+    return resp
 
 
 @graph_bp.route("/path", methods=["GET"])

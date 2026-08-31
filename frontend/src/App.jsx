@@ -101,9 +101,10 @@ function App() {
   const [pendingCount, setPendingCount] = useState(0);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedThreshold = useDebounce(confidenceThreshold, 200);
   const metrics = useMemo(
-    () => computeGraphMetrics(graph, confidenceThreshold),
-    [graph, confidenceThreshold]
+    () => computeGraphMetrics(graph, debouncedThreshold),
+    [graph, debouncedThreshold]
   );
 
   // Load complete graph data on initial mount or manual refresh
