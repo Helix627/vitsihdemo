@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import ExportModal from "./components/ExportModal";
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
 import AnalystReviewPanel from "./components/AnalystReviewPanel";
@@ -99,6 +100,10 @@ function App() {
   const [theme, setTheme] = useState("dark");
   const [cy, setCy] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  // Phase 4: Timeline
+  const [timeRange, setTimeRange] = useState([null, null]);
+  // Phase 5: Export
+  const [exportOpen, setExportOpen] = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
   const debouncedThreshold = useDebounce(confidenceThreshold, 200);
@@ -110,9 +115,10 @@ function App() {
   // Load complete graph data on initial mount or manual refresh
   const loadData = useCallback(async () => {
     setError("");
+    const [startTs, endTs] = timeRange;
     try {
       const [graphData, statsData, suggData] = await Promise.all([
-        fetchGraph(60, 0.0),
+        fetchGraph(60, 0.0, startTs, endTs),
         fetchStats(),
         fetch("/api/v1/identity/suggestions").then((r) => r.json()).catch(() => ({ suggestions: [] })),
       ]);
@@ -124,6 +130,17 @@ function App() {
       setError(message);
     } finally {
       setInitialLoading(false);
+    }
+  }, [timeRange]);
+
+  // Phase 4: Timeline range change handler — refetches graph with date filter
+  const handleTimelineChange = useCallback(async (startTs, endTs) => {
+    setTimeRange([startTs, endTs]);
+    try {
+      const graphData = await fetchGraph(60, 0.0, startTs, endTs);
+      setGraph(graphData);
+    } catch (err) {
+      console.error("Timeline graph reload failed:", err);
     }
   }, []);
 
@@ -276,6 +293,18 @@ function App() {
         theme={theme}
         onThemeToggle={() => setTheme((state) => (state === "light" ? "dark" : "light"))}
         pendingSuggestionsCount={pendingCount}
+        onOpenExport={() => setExportOpen(true)}
+        onTimelineChange={handleTimelineChange}
+        timeRange={timeRange}
+      />
+
+      {/* Phase 5 — Export Modal */}
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        timeRange={timeRange}
+        graphData={graph}
+        stats={stats}
       />
 
       {activeTab === "graph" && (

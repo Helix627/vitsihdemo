@@ -11,17 +11,25 @@ graph_bp = Blueprint("graph_bp", __name__)
 
 @graph_bp.route("/graph", methods=["GET"])
 def get_graph():
-    """Returns the Cytoscape graph elements payload."""
+    """Returns the Cytoscape graph elements payload.
+    Accepts optional start_ts / end_ts UNIX timestamp params for timeline filtering (Phase 4).
+    """
     min_confidence = request.args.get("min_confidence", default=0.0, type=float)
     limit = request.args.get("limit", default=50, type=int)
+    start_ts = request.args.get("start_ts", default=None, type=int)
+    end_ts = request.args.get("end_ts", default=None, type=int)
 
-    # Rebuild if limit is changed
-    if limit != NetworkXGraphEngine._ACTIVE_VENDOR_LIMIT:
-        NetworkXGraphEngine.build_graph(vendor_limit=limit)
+    # Rebuild graph when limit or time range changes
+    needs_rebuild = (
+        limit != NetworkXGraphEngine._ACTIVE_VENDOR_LIMIT
+        or start_ts != NetworkXGraphEngine._START_TS
+        or end_ts != NetworkXGraphEngine._END_TS
+    )
+    if needs_rebuild:
+        NetworkXGraphEngine.build_graph(vendor_limit=limit, start_ts=start_ts, end_ts=end_ts)
 
     cytoscape_data = CytoscapeSerializer.to_cytoscape_json(min_confidence=min_confidence)
     resp = make_response(jsonify(cytoscape_data))
-    # Allow browser / proxy to cache graph for 30 seconds
     resp.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
     return resp
 

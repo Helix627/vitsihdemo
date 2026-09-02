@@ -6,10 +6,12 @@ from flask_cors import CORS
 from api.routes_analysis import analysis_bp
 from api.routes_entities import entities_bp
 from api.routes_evolution import evolution_bp
+from api.routes_export import export_bp
 from api.routes_graph import graph_bp
 from api.routes_infrastructure import infrastructure_bp
 from api.routes_resolution import resolution_bp
 from api.routes_search import search_bp
+from api.routes_timeline import timeline_bp
 from config import DEBUG, SERVER_HOST, SERVER_PORT
 from database.connection import init_connection_pool
 from core.logging import logger
@@ -32,6 +34,8 @@ def create_app() -> Flask:
     app.register_blueprint(search_bp)
     app.register_blueprint(evolution_bp)
     app.register_blueprint(infrastructure_bp)
+    app.register_blueprint(timeline_bp)
+    app.register_blueprint(export_bp)
 
     @app.route("/", methods=["GET"])
     def home():

@@ -5,11 +5,13 @@ const api = axios.create({
   timeout: 30000,
 });
 
-export const fetchGraph = async (limit, minConfidence = 0.0) => {
+export const fetchGraph = async (limit, minConfidence = 0.0, startTs = null, endTs = null) => {
   const response = await api.get("/graph", {
     params: {
       ...(limit ? { limit } : {}),
       ...(minConfidence > 0 ? { min_confidence: minConfidence } : {}),
+      ...(startTs ? { start_ts: startTs } : {}),
+      ...(endTs ? { end_ts: endTs } : {}),
     },
   });
   return response.data;
@@ -18,6 +20,47 @@ export const fetchGraph = async (limit, minConfidence = 0.0) => {
 export const fetchStats = async () => {
   const response = await api.get("/statistics");
   return response.data;
+};
+
+// ---- Phase 4: Timeline ----
+export const fetchTimelineRange = async () => {
+  const response = await api.get("/api/v1/timeline/range");
+  return response.data;
+};
+
+export const fetchTimelineActivity = async (startTs, endTs) => {
+  const response = await api.get("/api/v1/timeline/activity", {
+    params: { start: startTs, end: endTs },
+  });
+  return response.data;
+};
+
+// ---- Phase 5: Export ----
+export const fetchExportPreview = async (startTs = null, endTs = null) => {
+  const response = await api.post("/api/v1/export/preview", {
+    ...(startTs ? { start_ts: startTs } : {}),
+    ...(endTs ? { end_ts: endTs } : {}),
+  });
+  return response.data;
+};
+
+export const downloadExportCSV = (startTs = null, endTs = null, limit = 5000) => {
+  const params = new URLSearchParams();
+  if (startTs) params.append("start_ts", startTs);
+  if (endTs) params.append("end_ts", endTs);
+  params.append("limit", limit);
+  window.open(`http://localhost:5000/api/v1/export/csv?${params}`, "_blank");
+};
+
+export const downloadExportJSON = (startTs = null, endTs = null) => {
+  const params = new URLSearchParams();
+  if (startTs) params.append("start_ts", startTs);
+  if (endTs) params.append("end_ts", endTs);
+  window.open(`http://localhost:5000/api/v1/export/json?${params}`, "_blank");
+};
+
+export const downloadGraphSnapshot = () => {
+  window.open("http://localhost:5000/api/v1/export/graph-snapshot", "_blank");
 };
 
 export const fetchEntityDetails = async (id) => {

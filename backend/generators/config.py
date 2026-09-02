@@ -16,17 +16,17 @@ class GeneratorConfig:
         "Agora": {
             "market_id": 1,
             "domain": "agorahooawayyfoe.onion",
-            "active_span": (1399775743, 1441549200),  # ~2014 - late 2015
+            "active_span": (1399775743, 1441549200),  # May 2014 - Sep 2015
         },
         "ShadowBay": {
             "market_id": 101,
             "domain": "shadowbay7nxqp2a.onion",
-            "active_span": (1441550000, 1490000000),  # ~late 2015 - early 2017
+            "active_span": (1405112000, 1450000000),  # Jul 2014 - Dec 2015
         },
         "NightMarket": {
             "market_id": 102,
             "domain": "nightmkt3yvwz89.onion",
-            "active_span": (1470000000, 1530000000),  # ~2016 - 2018
+            "active_span": (1416728746, 1451606399),  # Nov 2014 - Dec 2015
         },
     })
 

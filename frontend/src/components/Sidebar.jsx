@@ -212,32 +212,61 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode }) => {
       {/* 3. Visual Legend */}
       <section className="panel">
         <h2>🏷️ Visual Legend</h2>
-        <div className="legend-item">
-          <span className="legend-dot vendor-dot" /> <strong>Vendor (Agora, ShadowBay, NightMarket)</strong>
+        
+        <div style={{ marginBottom: "10px" }}>
+          <p style={{ margin: "0 0 6px", fontSize: "0.74rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>
+            Entity Nodes
+          </p>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#EC4899", borderRadius: "2px" }} /> 
+            <span><strong>Marketplace</strong> (Agora, ShadowBay, NightMarket)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#10B981" }} /> 
+            <span><strong>Vendor / Persona</strong> (Threat Actor Root)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#8B5CF6" }} /> 
+            <span><strong>Username / Alias</strong> (Platform Handle)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#F59E0B" }} /> 
+            <span><strong>Bitcoin Wallet</strong> (BTC Base58/Bech32)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#EA580C" }} /> 
+            <span><strong>Monero Wallet</strong> (XMR Standard/Subaddress)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#F97316", transform: "rotate(45deg)", borderRadius: "1px" }} /> 
+            <span><strong>PGP Key</strong> (OpenPGP Fingerprint)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#0284C7" }} /> 
+            <span><strong>Email Address</strong> (Proton, TorBox, Elude)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot" style={{ background: "#06B6D4" }} /> 
+            <span><strong>Telegram / Discord</strong> (@handle / tag)</span>
+          </div>
         </div>
-        <div className="legend-item">
-          <span className="legend-dot username-dot" /> <strong>Username / Mutated Alias</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot email-dot" /> <strong>Email Address</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot bitcoin-dot" /> <strong>Bitcoin Wallet (Base58/Bech32)</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot pgp-dot" /> <strong>PGP Key (Diamond)</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#06B6D4" }} /> <strong>Telegram (@handle)</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#6366F1" }} /> <strong>Discord Tag</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#F59E0B" }} /> <strong>Dashed Orange: Pending Suggestion</strong>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: "#10B981" }} /> <strong>Solid Green: Confirmed Link</strong>
+
+        <div>
+          <p style={{ margin: "8px 0 6px", fontSize: "0.74rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>
+            Relationship Edges
+          </p>
+          <div className="legend-item">
+            <span style={{ display: "inline-block", width: "16px", height: "3px", background: "#10B981", marginRight: "8px", verticalAlign: "middle" }} /> 
+            <span><strong>Solid Green:</strong> Deterministic / Confirmed</span>
+          </div>
+          <div className="legend-item">
+            <span style={{ display: "inline-block", width: "16px", height: "0px", borderTop: "3px dashed #F59E0B", marginRight: "8px", verticalAlign: "middle" }} /> 
+            <span><strong>Dashed Orange:</strong> Pending Suggestion (60–94%)</span>
+          </div>
+          <div className="legend-item">
+            <span style={{ display: "inline-block", width: "16px", height: "0px", borderTop: "3px dashed #EC4899", marginRight: "8px", verticalAlign: "middle" }} /> 
+            <span><strong>Dashed Pink:</strong> Stylometric Author Match</span>
+          </div>
         </div>
       </section>
     </aside>

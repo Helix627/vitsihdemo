@@ -12,7 +12,9 @@ const NODE_STYLES = [
   { selector: "node[type = 'telegram']", style: { "background-color": "#06B6D4", shape: "round-rectangle" } },
   { selector: "node[type = 'discord']", style: { "background-color": "#6366F1", shape: "round-rectangle" } },
   { selector: "node[type = 'forum_handle']", style: { "background-color": "#64748B", shape: "hexagon" } },
-  { selector: "node[type = 'marketplace']", style: { "background-color": "#EC4899", shape: "octagon", width: "70px", height: "70px", "font-size": "12px", "font-weight": "bold" } },
+  { selector: "node[type = 'onion']", style: { "background-color": "#D946EF", shape: "barrel" } },
+  { selector: "node[type = 'origin_ip']", style: { "background-color": "#EF4444", shape: "round-rectangle", "border-color": "#DC2626", "border-width": 3 } },
+  { selector: "node[type = 'marketplace']", style: { "background-color": "#EC4899", shape: "octagon", width: "76px", height: "76px", "font-size": "12px", "font-weight": "bold" } },
   { selector: "node[id = 'market_agora']", style: { "background-color": "#EC4899", "border-color": "#BE185D", "border-width": 3 } },
   { selector: "node[id = 'market_shadowbay']", style: { "background-color": "#8B5CF6", "border-color": "#6D28D9", "border-width": 3 } },
   { selector: "node[id = 'market_nightmarket']", style: { "background-color": "#06B6D4", "border-color": "#0891B2", "border-width": 3 } },
@@ -35,6 +37,14 @@ const EDGE_STYLES = [
   {
     selector: "edge[relation = 'LIKELY_SAME_AS'], edge[relation = 'probabilistic_similarity']",
     style: { width: 2.5, "line-color": "#EC4899", "target-arrow-color": "#EC4899", "line-style": "dashed" },
+  },
+  {
+    selector: "edge[relation = 'RESOLVES_TO_ORIGIN'], edge[type = 'ATTRIBUTION']",
+    style: { width: 3.0, "line-color": "#EF4444", "target-arrow-color": "#EF4444", "line-style": "dashed" },
+  },
+  {
+    selector: "edge[relation = 'HOSTED_ON'], edge[type = 'INFRASTRUCTURE']",
+    style: { width: 2.2, "line-color": "#D946EF", "target-arrow-color": "#D946EF" },
   },
   {
     selector: "edge[relation = 'HAS_EMAIL']",
@@ -60,23 +70,71 @@ const getLayoutConfig = (layoutName) => {
       name: "cose",
       animate: false,
       fit: true,
-      padding: 45,
+      padding: 60,
       randomize: false,
-      nodeRepulsion: (node) => (node.data("type") === "marketplace" ? 600000 : 350000),
-      idealEdgeLength: (edge) => (edge.data("relation") === "LISTED_ON" ? 100 : 55),
-      edgeElasticity: () => 40,
-      nestingFactor: 1.2,
-      gravity: 0.3,
-      numIter: 400,        // was 1000 — halved for faster convergence
-      coolingFactor: 0.95,
+      // Strong repulsion to keep clusters distinct and open
+      nodeRepulsion: (node) => {
+        const type = node.data("type");
+        if (type === "marketplace") return 4500000;
+        if (type === "vendor") return 1800000;
+        return 1200000;
+      },
+      // Longer ideal edges to give nodes ample breathing room
+      idealEdgeLength: (edge) => {
+        const rel = edge.data("relation");
+        if (rel === "LISTED_ON") return 220;
+        if (rel === "RESOLVES_TO_ORIGIN" || rel === "HOSTED_ON") return 140;
+        if (rel === "SAME_AS" || rel === "SUGGESTION") return 120;
+        return 90;
+      },
+      edgeElasticity: () => 15,
+      nestingFactor: 0.8,
+      gravity: 0.08,        // Soft gravity so clusters expand outward instead of crushing inward
+      gravityRange: 4.5,
+      numIter: 500,
+      coolingFactor: 0.98,
       minTemp: 1.0,
+    };
+  }
+  if (layoutName === "concentric") {
+    return {
+      name: "concentric",
+      animate: false,
+      fit: true,
+      padding: 60,
+      minNodeSpacing: 60,
+      concentric: (node) => {
+        if (node.data("type") === "marketplace") return 10;
+        if (node.data("type") === "vendor") return 6;
+        return 2;
+      },
+      levelWidth: () => 1,
+    };
+  }
+  if (layoutName === "breadthfirst") {
+    return {
+      name: "breadthfirst",
+      animate: false,
+      fit: true,
+      padding: 60,
+      spacingFactor: 1.75,
+      directed: false,
+    };
+  }
+  if (layoutName === "circle") {
+    return {
+      name: "circle",
+      animate: false,
+      fit: true,
+      padding: 60,
+      spacingFactor: 1.5,
     };
   }
   return {
     name: layoutName,
     animate: false,
     fit: true,
-    padding: 45,
+    padding: 60,
   };
 };
 

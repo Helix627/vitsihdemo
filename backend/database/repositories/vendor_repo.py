@@ -61,17 +61,30 @@ class VendorRepository:
             return rows
 
     @staticmethod
-    def list_cross_market_sample(limit_per_market: int = 25) -> List[Dict[str, Any]]:
-        """Fetch balanced cross-marketplace vendor slice for multi-market graph visualization."""
-        query = """
-        (SELECT * FROM Vendors WHERE market_id = 1 ORDER BY vendor_id ASC LIMIT %s)
-        UNION ALL
-        (SELECT * FROM Vendors WHERE market_id = 101 ORDER BY vendor_id ASC LIMIT %s)
-        UNION ALL
-        (SELECT * FROM Vendors WHERE market_id = 102 ORDER BY vendor_id ASC LIMIT %s);
+    def list_cross_market_sample(
+        limit_per_market: int = 25,
+        start_ts: Optional[int] = None,
+        end_ts: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Fetch balanced cross-marketplace vendor slice for multi-market graph visualization.
+        Optionally filters by UNIX timestamp range (added column).
         """
+        ts_clause = ""
+        ts_params_base: tuple = ()
+        if start_ts and end_ts:
+            ts_clause = "AND added BETWEEN %s AND %s"
+            ts_params_base = (start_ts, end_ts)
+
+        query = f"""
+        (SELECT * FROM Vendors WHERE market_id = 1   {ts_clause} ORDER BY vendor_id ASC LIMIT %s)
+        UNION ALL
+        (SELECT * FROM Vendors WHERE market_id = 101  {ts_clause} ORDER BY vendor_id ASC LIMIT %s)
+        UNION ALL
+        (SELECT * FROM Vendors WHERE market_id = 102  {ts_clause} ORDER BY vendor_id ASC LIMIT %s);
+        """
+        params = (*ts_params_base, limit_per_market, *ts_params_base, limit_per_market, *ts_params_base, limit_per_market)
         with get_db_cursor() as cursor:
-            cursor.execute(query, (limit_per_market, limit_per_market, limit_per_market))
+            cursor.execute(query, params)
             rows = cursor.fetchall()
             for r in rows:
                 r["marketplace_name"] = VendorRepository.MARKET_NAMES.get(r.get("market_id"), "Darknet Market")

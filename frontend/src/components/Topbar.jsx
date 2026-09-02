@@ -1,4 +1,5 @@
 import React from "react";
+import TimelineSlider from "./TimelineSlider";
 
 const Topbar = ({
   activeTab,
@@ -13,12 +14,15 @@ const Topbar = ({
   theme,
   onThemeToggle,
   pendingSuggestionsCount = 0,
+  onOpenExport,
+  onTimelineChange,
+  timeRange,
 }) => {
   return (
     <header className="topbar">
       <div className="topbar-brand">
         <h1>Dark Web Identity Resolution Platform</h1>
-        <p>Deterministic & Probabilistic Threat Intelligence Graph linking personas, PGP keys, and crypto wallets</p>
+        <p>Deterministic &amp; Probabilistic Threat Intelligence Graph linking personas, PGP keys, and crypto wallets</p>
       </div>
 
       <div className="topbar-tabs">
@@ -35,7 +39,7 @@ const Topbar = ({
           className={`tab-btn ${activeTab === "infrastructure" ? "active" : ""}`}
           onClick={() => onTabChange("infrastructure")}
         >
-          🛡️ Tor Infrastructure & Attribution
+          🛡️ Tor Infrastructure &amp; Attribution
         </button>
 
         <button
@@ -45,9 +49,7 @@ const Topbar = ({
         >
           ⚖️ Review Suggestions
           {pendingSuggestionsCount > 0 && (
-            <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/30 text-amber-300 border border-amber-500/50">
-              {pendingSuggestionsCount}
-            </span>
+            <span className="pending-badge">{pendingSuggestionsCount}</span>
           )}
         </button>
 
@@ -57,6 +59,16 @@ const Topbar = ({
           onClick={() => onTabChange("analyzer")}
         >
           📥 Intelligence Studio
+        </button>
+
+        {/* Phase 5 — Export Button (always visible, not a tab) */}
+        <button
+          type="button"
+          className="tab-btn tab-btn-export"
+          onClick={onOpenExport}
+          title="Export CSV, JSON, or PDF Dossier"
+        >
+          ⬇️ Export
         </button>
       </div>
 
@@ -79,12 +91,6 @@ const Topbar = ({
             <button className="btn" onClick={onFit} type="button">
               Fit
             </button>
-            <button className="btn" onClick={onResetZoom} type="button">
-              Reset
-            </button>
-            <button className="btn" onClick={onExport} type="button">
-              Export PNG
-            </button>
             <button className="btn" onClick={onFullscreen} type="button">
               Fullscreen
             </button>
@@ -97,6 +103,13 @@ const Topbar = ({
           {theme === "light" ? "🌙 Dark" : "☀️ Light"}
         </button>
       </div>
+
+      {/* Phase 4 — Timeline Slider (shown only on graph tab) */}
+      {activeTab === "graph" && onTimelineChange && (
+        <div className="topbar-timeline">
+          <TimelineSlider onRangeChange={onTimelineChange} timeRange={timeRange} />
+        </div>
+      )}
     </header>
   );
 };
