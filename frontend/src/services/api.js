@@ -63,6 +63,22 @@ export const downloadGraphSnapshot = () => {
   window.open("http://localhost:5000/api/v1/export/graph-snapshot", "_blank");
 };
 
+// ---- Autonomous Daemon API ----
+export const fetchAutonomousStatus = async () => {
+  const response = await api.get("/api/v1/autonomous/status");
+  return response.data;
+};
+
+export const toggleAutonomousEngine = async (enable = null) => {
+  const response = await api.post("/api/v1/autonomous/toggle", { enable });
+  return response.data;
+};
+
+export const triggerInstantScan = async () => {
+  const response = await api.post("/api/v1/autonomous/trigger");
+  return response.data;
+};
+
 export const fetchEntityDetails = async (id) => {
   const response = await api.get(`/entity/${id}`);
   return response.data;

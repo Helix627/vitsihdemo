@@ -105,6 +105,41 @@ function App() {
   // Phase 5: Export
   const [exportOpen, setExportOpen] = useState(false);
 
+  // Dynamic Sidebar Resizing
+  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback(
+    (e) => {
+      if (isResizing) {
+        const newWidth = document.body.clientWidth - e.clientX - 28;
+        if (newWidth >= 300 && newWidth <= 760) {
+          setSidebarWidth(newWidth);
+          if (cy) cy.resize();
+        }
+      }
+    },
+    [isResizing, cy]
+  );
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [resize, stopResizing]);
+
   const debouncedSearch = useDebounce(searchQuery, 300);
   const debouncedThreshold = useDebounce(confidenceThreshold, 200);
   const metrics = useMemo(
@@ -296,6 +331,7 @@ function App() {
         onOpenExport={() => setExportOpen(true)}
         onTimelineChange={handleTimelineChange}
         timeRange={timeRange}
+        onNewSuggestion={loadData}
       />
 
       {/* Phase 5 — Export Modal */}
@@ -318,7 +354,12 @@ function App() {
       )}
 
       {activeTab === "graph" && (
-        <main className="graph-layout">
+        <main
+          className="graph-layout"
+          style={{
+            gridTemplateColumns: `minmax(0, 1fr) 8px ${sidebarWidth}px`,
+          }}
+        >
           <section className="graph-panel fade-in">
             <GraphView
               graph={graph}
@@ -331,12 +372,25 @@ function App() {
             />
           </section>
 
-          <Sidebar
-            stats={{ ...stats, edges: metrics.visibleEdges }}
-            selectedData={selectedData}
-            metrics={metrics}
-            onSelectNode={handleSuggestionSelect}
-          />
+          {/* Drag Resizer Bar */}
+          <div
+            className={`layout-resizer ${isResizing ? "resizing" : ""}`}
+            onMouseDown={startResizing}
+            title="Drag to expand or shrink the Intelligence Metrics & Persona Inspector panel"
+          >
+            <div className="resizer-handle" />
+          </div>
+
+          <div style={{ width: `${sidebarWidth}px`, minWidth: 0 }}>
+            <Sidebar
+              stats={{ ...stats, edges: metrics.visibleEdges }}
+              selectedData={selectedData}
+              metrics={metrics}
+              onSelectNode={handleSuggestionSelect}
+              sidebarWidth={sidebarWidth}
+              onSetSidebarWidth={setSidebarWidth}
+            />
+          </div>
         </main>
       )}
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchVendorProvenance } from "../services/api";
 
-const Sidebar = ({ stats, selectedData, metrics, onSelectNode }) => {
+const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 380, onSetSidebarWidth }) => {
   const kind = selectedData?.kind || "vendor";
   const vendor = selectedData?.vendor;
   const identity = selectedData?.identity;
@@ -27,7 +27,21 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode }) => {
     <aside className="sidebar">
       {/* 1. Global Network Summary */}
       <section className="panel">
-        <h2>📊 Intelligence Metrics</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <h2 style={{ margin: 0 }}>📊 Intelligence Metrics</h2>
+          {onSetSidebarWidth && (
+            <div style={{ display: "flex", gap: "4px" }}>
+              <button
+                type="button"
+                className="btn-sidebar-resize"
+                onClick={() => onSetSidebarWidth(sidebarWidth > 450 ? 380 : 540)}
+                title={sidebarWidth > 450 ? "Switch to Compact width (380px)" : "Expand width for deeper analysis (540px)"}
+              >
+                {sidebarWidth > 450 ? "▶ Compact" : "◀ Expand"}
+              </button>
+            </div>
+          )}
+        </div>
         <div className="stats-grid">
           <div className="stats-card">
             <p className="stats-label">Total Digital Identities</p>
@@ -121,6 +135,68 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode }) => {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Behavioral & Operational Fingerprint */}
+                {selectedData?.behavioral_profile && (
+                  <div className="behavioral-panel">
+                    <div className="behavioral-header">
+                      <span className="behavioral-title">🧠 Behavioral &amp; Opsec Fingerprint:</span>
+                      <span
+                        className="threat-tier-badge"
+                        style={{
+                          background: `${selectedData.behavioral_profile.threat_color}22`,
+                          color: selectedData.behavioral_profile.threat_color,
+                          borderColor: `${selectedData.behavioral_profile.threat_color}66`,
+                        }}
+                      >
+                        {selectedData.behavioral_profile.threat_tier}
+                      </span>
+                    </div>
+
+                    {/* Operational Timezone */}
+                    <div className="behavioral-row">
+                      <span className="behavioral-key">🌐 Estimated Timezone:</span>
+                      <span className="behavioral-val">{selectedData.behavioral_profile.estimated_timezone}</span>
+                    </div>
+
+                    {/* Category Distribution */}
+                    {selectedData.behavioral_profile.categories && (
+                      <div className="category-dist-wrap">
+                        <span className="behavioral-key" style={{ marginBottom: "4px" }}>📦 Category Specialization:</span>
+                        {selectedData.behavioral_profile.categories.map((cat, idx) => (
+                          <div key={idx} className="category-bar-item">
+                            <div className="category-bar-label">
+                              <span>{cat.name}</span>
+                              <span>{cat.pct}%</span>
+                            </div>
+                            <div className="category-progress-track">
+                              <div className="category-progress-fill" style={{ width: `${cat.pct}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* De-Anonymization Proof Chain */}
+                    {selectedData.behavioral_profile.proof_chain && (
+                      <div className="proof-chain-wrap">
+                        <span className="behavioral-key" style={{ marginBottom: "6px" }}>🔗 De-Anonymization Evidence Chain:</span>
+                        <div className="proof-steps-list">
+                          {selectedData.behavioral_profile.proof_chain.map((step) => (
+                            <div key={step.step} className="proof-step-card">
+                              <div className="proof-step-header">
+                                <span className="proof-step-num">Step {step.step}</span>
+                                <span className="proof-step-title">{step.title}</span>
+                                <span className="proof-step-conf">{Math.round(step.confidence * 100)}%</span>
+                              </div>
+                              <p className="proof-step-evidence">{step.evidence}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -56,6 +56,12 @@ def get_vendor_details(vendor_id: int):
     # Fetch cross-marketplace linked vendor personas
     cross_market_accounts = VendorRepository.get_cross_market_links(vendor_id)
 
+    # Generate behavioral and operational fingerprint
+    from services.behavioral_service import BehavioralEngine
+    behavioral_profile = BehavioralEngine.generate_vendor_behavioral_profile(
+        vendor, identities, cross_market_accounts
+    )
+
     return jsonify(
         {
             "vendor": vendor,
@@ -63,6 +69,7 @@ def get_vendor_details(vendor_id: int):
             "grouped_identities": grouped,
             "cross_market_accounts": cross_market_accounts,
             "cross_market_count": len(cross_market_accounts),
+            "behavioral_profile": behavioral_profile,
         }
     )
 

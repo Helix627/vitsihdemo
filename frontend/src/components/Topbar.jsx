@@ -1,4 +1,5 @@
 import React from "react";
+import AutonomousTicker from "./AutonomousTicker";
 import TimelineSlider from "./TimelineSlider";
 
 const Topbar = ({
@@ -7,16 +8,15 @@ const Topbar = ({
   layout,
   onLayoutChange,
   onFit,
-  onResetZoom,
-  onRefresh,
-  onExport,
   onFullscreen,
+  onRefresh,
   theme,
   onThemeToggle,
   pendingSuggestionsCount = 0,
   onOpenExport,
   onTimelineChange,
   timeRange,
+  onNewSuggestion,
 }) => {
   return (
     <header className="topbar">
@@ -61,7 +61,7 @@ const Topbar = ({
           📥 Intelligence Studio
         </button>
 
-        {/* Phase 5 — Export Button (always visible, not a tab) */}
+        {/* Phase 5 — Export Button */}
         <button
           type="button"
           className="tab-btn tab-btn-export"
@@ -73,6 +73,9 @@ const Topbar = ({
       </div>
 
       <div className="topbar-controls">
+        {/* Autonomous Ingestion Daemon Widget */}
+        <AutonomousTicker onNewSuggestion={onNewSuggestion} />
+
         {activeTab === "graph" && (
           <>
             <select
