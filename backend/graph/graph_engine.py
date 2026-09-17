@@ -42,6 +42,17 @@ class NetworkXGraphEngine:
 
     MARKET_NODES = {
         1: {"id": "market_agora", "label": "Agora Marketplace"},
+        2: {"id": "market_pandora", "label": "Pandora Marketplace"},
+        5: {"id": "market_nucleus", "label": "Nucleus Marketplace"},
+        6: {"id": "market_evolution", "label": "Evolution Marketplace"},
+        7: {"id": "market_abraxas", "label": "Abraxas Marketplace"},
+        17: {"id": "market_mango", "label": "Mango Marketplace"},
+        19: {"id": "market_outlaw", "label": "Outlaw Marketplace"},
+        21: {"id": "market_silkkitie", "label": "Silkkitie Marketplace"},
+        23: {"id": "market_tochka", "label": "Tochka Marketplace"},
+        60: {"id": "market_hansa", "label": "Hansa Marketplace"},
+        65: {"id": "market_alphabay", "label": "AlphaBay Marketplace"},
+        67: {"id": "market_wallstreet", "label": "WallStreet Marketplace"},
         101: {"id": "market_shadowbay", "label": "ShadowBay Marketplace"},
         102: {"id": "market_nightmarket", "label": "NightMarket Marketplace"},
     }
@@ -56,6 +67,26 @@ class NetworkXGraphEngine:
         if cls._GRAPH is None:
             cls.build_graph()
         return cls._GRAPH
+
+    @classmethod
+    def _get_or_create_market_node(cls, G: nx.Graph, market_id: int) -> str:
+        """Ensures a marketplace hub node exists in G and returns its node ID."""
+        m_meta = cls.MARKET_NODES.get(market_id)
+        if not m_meta:
+            m_name = VendorRepository.MARKET_NAMES.get(market_id, f"Market #{market_id}")
+            m_meta = {"id": f"market_{market_id}", "label": f"{m_name} Marketplace"}
+
+        m_id_str = m_meta["id"]
+        if not G.has_node(m_id_str):
+            G.add_node(
+                m_id_str,
+                label=m_meta["label"],
+                type="marketplace",
+                market_id=market_id,
+                color=cls.NODE_PALETTE["marketplace"]["color"],
+                shape=cls.NODE_PALETTE["marketplace"]["shape"],
+            )
+        return m_id_str
 
     @classmethod
     def build_graph(
@@ -77,25 +108,36 @@ class NetworkXGraphEngine:
         cls._END_TS = end_ts
         G = nx.Graph()
 
-        # 1. Add Marketplace Hub Nodes
-        for m_id, m_meta in cls.MARKET_NODES.items():
-            G.add_node(
-                m_meta["id"],
-                label=m_meta["label"],
-                type="marketplace",
-                market_id=m_id,
-                color=cls.NODE_PALETTE["marketplace"]["color"],
-                shape=cls.NODE_PALETTE["marketplace"]["shape"],
-            )
+        # 1. Add Primary Marketplace Hub Nodes
+        for m_id in [1, 101, 102]:
+            cls._get_or_create_market_node(G, m_id)
 
         # 2. Query Cross-Marketplace Vendor Sample + Recent Submissions
         limit_per_mkt = max(10, vendor_limit // 3)
-        vendors = VendorRepository.list_cross_market_sample(
+        base_vendors = VendorRepository.list_cross_market_sample(
             limit_per_market=limit_per_mkt,
             start_ts=start_ts,
             end_ts=end_ts,
         )
-        vendor_ids = [v["vendor_id"] for v in vendors]
+
+        # Build map of all active vendors, expanding cross-marketplace counterparts
+        # Hard cap: at most 3 counterparts per base vendor; total vendors capped at vendor_limit * 2
+        vendor_map: Dict[int, Dict[str, Any]] = {v["vendor_id"]: v for v in base_vendors}
+        MAX_CROSS_EXPAND = vendor_limit * 2
+        for v in list(base_vendors):
+            if len(vendor_map) >= MAX_CROSS_EXPAND:
+                break
+            v_id = v["vendor_id"]
+            cross_links = VendorRepository.get_cross_market_links(v_id)
+            for link in cross_links[:3]:  # max 3 counterparts per vendor
+                l_vid = link["vendor_id"]
+                if l_vid not in vendor_map and len(vendor_map) < MAX_CROSS_EXPAND:
+                    l_v = VendorRepository.get_by_id(l_vid)
+                    if l_v:
+                        vendor_map[l_vid] = l_v
+
+        vendors = list(vendor_map.values())
+        vendor_ids = list(vendor_map.keys())
 
         if not vendor_ids:
             cls._GRAPH = G
@@ -108,7 +150,7 @@ class NetworkXGraphEngine:
             node_id = f"vendor_{v_id}"
             v_name = v.get("user_name") or f"Vendor #{v_id}"
             m_id = v.get("market_id") or 1
-            mkt_target = cls.MARKET_NODES.get(m_id, cls.MARKET_NODES[1])["id"]
+            mkt_target = cls._get_or_create_market_node(G, m_id)
 
             G.add_node(
                 node_id,

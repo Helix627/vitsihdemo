@@ -258,24 +258,43 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
                   <strong>Linked Vendors Across Markets:</strong>
                 </p>
                 <div className="item-badge-list">
-                  {(selectedData.linked_vendors || []).map((v, idx) => (
-                    <span key={idx} className="item-badge">
-                      {v.user_name || `Vendor #${v.vendor_id}`} ({v.market_id === 101 ? "ShadowBay" : v.market_id === 102 ? "NightMarket" : "Agora"})
-                    </span>
-                  ))}
+                  {(() => {
+                    const uniqueVendors = [];
+                    const seen = new Set();
+                    (selectedData.linked_vendors || []).forEach((v) => {
+                      const key = `${v.vendor_id}_${v.market_id}`;
+                      if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueVendors.push(v);
+                      }
+                    });
+                    return uniqueVendors.length > 0 ? (
+                      uniqueVendors.map((v, idx) => (
+                        <span key={idx} className="item-badge">
+                          {v.user_name || `Vendor #${v.vendor_id}`} ({v.market_id === 101 ? "ShadowBay" : v.market_id === 102 ? "NightMarket" : "Agora"})
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted">No linked vendors</span>
+                    );
+                  })()}
                 </div>
                 <p>
                   <strong>Graph Relationships ({relationships.length}):</strong>
                 </p>
-                <div className="item-badge-list">
-                  {relationships.slice(0, 5).map((r, idx) => (
-                    <div key={idx} className="correlated-item">
-                      <strong>{r.relationship_type}</strong> (Weight: {r.weight})
-                      <div className="text-xs text-muted">
-                        Linked to: {r.id1_val === identity.normalized_value ? r.id2_val : r.id1_val}
+                <div className="item-badge-list" style={{ maxHeight: "160px", overflowY: "auto" }}>
+                  {relationships.length > 0 ? (
+                    relationships.map((r, idx) => (
+                      <div key={idx} className="correlated-item">
+                        <strong>{r.relationship_type}</strong> (Weight: {r.weight})
+                        <div className="text-xs text-muted">
+                          Linked to: {r.id1_val === identity.normalized_value ? r.id2_val : r.id1_val}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted">No adjacent relationships</span>
+                  )}
                 </div>
               </>
             )}

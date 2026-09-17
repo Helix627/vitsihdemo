@@ -198,7 +198,11 @@ function App() {
       setIsSearching(true);
       try {
         const result = await searchNodes(query);
-        const aliasItems = (result.aliases || result.vendors || []).map((item) => ({
+        const vendorItems = (result.vendors || []).map((item) => ({
+          ...item,
+          type: "vendor",
+        }));
+        const aliasItems = (result.aliases || []).map((item) => ({
           ...item,
           type: "alias",
         }));
@@ -219,7 +223,7 @@ function App() {
           type: "bitcoin",
         }));
 
-        setSuggestions([...aliasItems, ...userItems, ...pgpItems, ...emailItems, ...btcItems]);
+        setSuggestions([...vendorItems, ...aliasItems, ...userItems, ...pgpItems, ...emailItems, ...btcItems]);
       } catch {
         setSuggestions([]);
       } finally {
@@ -256,10 +260,13 @@ function App() {
       setActiveTab("graph");
     }
 
+    // Target node ID
+    const targetId = item.id || (item.vendor_id ? `vendor_${item.vendor_id}` : (item.identity_id ? `ident_${item.identity_id}` : null));
+
     // If node is not currently in cy elements, reload graph
-    if (cy && !cy.getElementById(item.id).length) {
+    if (cy && targetId && !cy.getElementById(targetId).length) {
       try {
-        const graphData = await fetchGraph(80, 0.0);
+        const graphData = await fetchGraph(100, 0.0);
         setGraph(graphData);
       } catch (err) {
         console.error("Failed refreshing graph for searched node", err);
@@ -267,7 +274,7 @@ function App() {
     }
 
     setFocusRequest({
-      id: item.id,
+      id: targetId,
       label: item.label,
       type: item.type,
       normalized_value: item.normalized_value,
@@ -275,27 +282,24 @@ function App() {
       identity_id: item.identity_id,
       time: Date.now(),
     });
-    await fetchNodeDetails(item);
+
+    await fetchNodeDetails({
+      ...item,
+      id: targetId,
+      detail_url: item.detail_url || (item.vendor_id ? `/vendor/${item.vendor_id}` : (item.identity_id ? `/identity/${item.identity_id}` : null)),
+    });
   };
 
   const handleFit = () => {
-    if (cy) cy.fit(cy.elements(), 50);
-  };
-
-  const handleResetZoom = () => {
     if (cy) {
-      cy.zoom(1);
-      cy.center();
+      cy.resize();
+      cy.stop(true, true);
+      cy.animate({
+        fit: { eles: cy.elements(), padding: 45 },
+        duration: 400,
+        easing: "ease-in-out-cubic",
+      });
     }
-  };
-
-  const handleExport = () => {
-    if (!cy) return;
-    const imageData = cy.png({ bg: "#0f172a", full: true, scale: 2 });
-    const link = document.createElement("a");
-    link.href = imageData;
-    link.download = "identity-resolution-graph.png";
-    link.click();
   };
 
   const handleFullscreen = () => {
@@ -309,6 +313,23 @@ function App() {
     graphRoot.requestFullscreen();
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSuggestions([]);
+    setSelectedNodeId("");
+    setSelectedData(null);
+    setFocusRequest(null);
+    if (cy) {
+      cy.elements().removeClass("dimmed").removeClass("highlighted").removeClass("search-focused");
+      cy.elements().unselect();
+      cy.stop(true, true);
+      cy.animate({
+        fit: { eles: cy.elements(), padding: 50 },
+        duration: 400,
+      });
+    }
+  };
+
   if (initialLoading) {
     return <Loading error={error} onRetry={loadData} />;
   }
@@ -320,11 +341,7 @@ function App() {
         onTabChange={setActiveTab}
         layout={layout}
         onLayoutChange={setLayout}
-        onFit={handleFit}
-        onResetZoom={handleResetZoom}
         onRefresh={loadData}
-        onExport={handleExport}
-        onFullscreen={handleFullscreen}
         theme={theme}
         onThemeToggle={() => setTheme((state) => (state === "light" ? "dark" : "light"))}
         pendingSuggestionsCount={pendingCount}
@@ -350,6 +367,9 @@ function App() {
           suggestions={suggestions}
           isSearching={isSearching}
           onSelectSuggestion={handleSuggestionSelect}
+          onClearSearch={handleClearSearch}
+          onFit={handleFit}
+          onFullscreen={handleFullscreen}
         />
       )}
 
@@ -369,6 +389,7 @@ function App() {
               onCyReady={setCy}
               selectedNodeId={selectedNodeId}
               focusRequest={focusRequest}
+              theme={theme}
             />
           </section>
 

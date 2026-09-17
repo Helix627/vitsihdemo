@@ -35,7 +35,14 @@ class IdentityRepository:
         """
         with get_db_cursor() as cursor:
             cursor.execute(query, (vendor_id,))
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+            seen = set()
+            unique = []
+            for r in rows:
+                if r["identity_id"] not in seen:
+                    seen.add(r["identity_id"])
+                    unique.append(r)
+            return unique
 
     @staticmethod
     def get_vendors_for_identity(identity_id: int) -> List[Dict[str, Any]]:
@@ -44,10 +51,18 @@ class IdentityRepository:
         FROM Vendors v
         JOIN VendorIdentityMap vim ON v.vendor_id = vim.vendor_id
         WHERE vim.identity_id = %s
+        ORDER BY v.market_id, v.vendor_id
         """
         with get_db_cursor() as cursor:
             cursor.execute(query, (identity_id,))
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+            seen = set()
+            unique = []
+            for r in rows:
+                if r["vendor_id"] not in seen:
+                    seen.add(r["vendor_id"])
+                    unique.append(r)
+            return unique
 
     @staticmethod
     def count_by_type() -> Dict[str, int]:

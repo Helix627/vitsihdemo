@@ -26,7 +26,19 @@ def search_entities():
     return jsonify(
         {
             "query": query,
-            "vendors": [{"id": f"vendor_{v['vendor_id']}", "vendor_id": v["vendor_id"], "label": v["user_name"], "type": "vendor", "detail_url": f"/vendor/{v['vendor_id']}"} for v in vendors],
+            "vendors": [
+                {
+                    "id": f"vendor_{v['vendor_id']}",
+                    "vendor_id": v["vendor_id"],
+                    "label": f"{v['user_name']} ({v.get('marketplace_name', 'Market')})",
+                    "username": v["user_name"],
+                    "market_id": v.get("market_id"),
+                    "marketplace_name": v.get("marketplace_name"),
+                    "type": "vendor",
+                    "detail_url": f"/vendor/{v['vendor_id']}",
+                }
+                for v in vendors
+            ],
             "aliases": [{"id": f"ident_{a['identity_id']}", "identity_id": a["identity_id"], "label": a["value"], "type": "alias", "normalized_value": a["normalized_value"], "detail_url": f"/identity/{a['identity_id']}"} for a in aliases],
             "usernames": [{"id": f"ident_{u['identity_id']}", "identity_id": u["identity_id"], "label": u["value"], "type": "username", "normalized_value": u["normalized_value"], "detail_url": f"/identity/{u['identity_id']}"} for u in usernames],
             "pgp_keys": [{"id": f"ident_{p['identity_id']}", "identity_id": p["identity_id"], "label": f"{p['value'][:12]}...{p['value'][-8:]}", "type": "pgp", "normalized_value": p["normalized_value"], "detail_url": f"/identity/{p['identity_id']}"} for p in pgp_keys],

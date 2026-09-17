@@ -17,8 +17,26 @@ def get_identity_details(identity_id: int):
     if not identity:
         return jsonify({"error": f"Identity #{identity_id} not found"}), 404
 
-    vendors = IdentityRepository.get_vendors_for_identity(identity_id)
-    relationships = RelationshipRepository.get_relationships_for_identity(identity_id)
+    raw_vendors = IdentityRepository.get_vendors_for_identity(identity_id)
+    raw_relationships = RelationshipRepository.get_relationships_for_identity(identity_id)
+
+    # Deduplicate vendors by vendor_id
+    seen_vendors = set()
+    vendors = []
+    for v in raw_vendors:
+        if v["vendor_id"] not in seen_vendors:
+            seen_vendors.add(v["vendor_id"])
+            vendors.append(v)
+
+    # Deduplicate relationships by (target_identity_val, relationship_type)
+    seen_rels = set()
+    relationships = []
+    for r in raw_relationships:
+        other_val = r["id2_val"] if r["identity1_id"] == identity_id else r["id1_val"]
+        rel_key = (other_val, r.get("relationship_type"))
+        if rel_key not in seen_rels:
+            seen_rels.add(rel_key)
+            relationships.append(r)
 
     return jsonify(
         {

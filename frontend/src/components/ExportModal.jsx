@@ -43,30 +43,36 @@ const ExportModal = ({ isOpen, onClose, timeRange, graphData, stats }) => {
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`<!DOCTYPE html><html><head>
-      <title>CTI Investigation Dossier — NTRO PS 26151</title>
+      <title>Onion Slayer — CTI Investigation Dossier</title>
       <style>
         body { font-family: 'Courier New', monospace; background: #fff; color: #111; margin: 40px; }
-        h1 { font-size: 22px; border-bottom: 3px solid #111; padding-bottom: 8px; margin-bottom: 4px; }
-        h2 { font-size: 14px; color: #444; margin: 0 0 24px; }
+        .header-brand { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #7c3aed; padding-bottom: 12px; margin-bottom: 8px; }
+        .header-brand img { width: 44px; height: 44px; }
+        h1 { font-size: 24px; margin: 0; color: #1e1b4b; }
+        h2 { font-size: 13px; color: #6d28d9; margin: 4px 0 0; letter-spacing: 0.05em; }
         h3 { font-size: 14px; border-bottom: 1px solid #ccc; padding: 4px 0; margin: 24px 0 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
-        th { background: #222; color: #fff; padding: 6px 8px; text-align: left; }
+        th { background: #1e1b4b; color: #fff; padding: 6px 8px; text-align: left; }
         td { border-bottom: 1px solid #e5e5e5; padding: 5px 8px; }
-        tr:nth-child(even) td { background: #f8f8f8; }
+        tr:nth-child(even) td { background: #f8fafc; }
         .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         .badge-red { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
         .badge-green { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-        .kpi-row { display: flex; gap: 24px; margin: 8px 0 20px; }
-        .kpi { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 16px; min-width: 110px; }
-        .kpi-val { font-size: 22px; font-weight: 900; }
-        .kpi-lbl { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .kpi-row { display: flex; gap: 24px; margin: 16px 0 20px; }
+        .kpi { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 6px; padding: 10px 16px; min-width: 110px; }
+        .kpi-val { font-size: 22px; font-weight: 900; color: #5b21b6; }
+        .kpi-lbl { font-size: 10px; color: #64748b; margin-top: 2px; text-transform: uppercase; }
         .section { margin-bottom: 32px; }
         .footer { margin-top: 40px; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; }
         @media print { body { margin: 20px; } button { display: none; } }
       </style>
     </head><body>
-      <h1>🔍 Threat Intelligence Investigation Dossier</h1>
-      <h2>Dark Web Identity Resolution Platform &nbsp;|&nbsp; NTRO Problem Statement 26151</h2>
+      <div class="header-brand">
+        <div>
+          <h1>🧅 ONION SLAYER</h1>
+          <h2>UNMASKING THREATS. SECURING TOMORROW. &nbsp;|&nbsp; CTI INVESTIGATION DOSSIER</h2>
+        </div>
+      </div>
 
       <div class="kpi-row">
         <div class="kpi"><div class="kpi-val">${preview?.vendor_count ?? "—"}</div><div class="kpi-lbl">Threat Actors</div></div>
