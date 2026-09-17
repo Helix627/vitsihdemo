@@ -374,25 +374,56 @@ const GraphView = ({
       return;
     }
 
-    // Find target by ID or fallback attributes
-    let target = focusRequest.id ? cy.getElementById(focusRequest.id) : cy.collection();
-    if (!target.length && focusRequest.label) {
-      target = cy.nodes().filter((n) => n.data("label") === focusRequest.label || n.data("username") === focusRequest.label);
+    // Find all target nodes belonging to this entity persona
+    let target = cy.collection();
+
+    // 1. Add all explicit node_ids (e.g. multiple vendor accounts across markets)
+    if (focusRequest.node_ids && Array.isArray(focusRequest.node_ids)) {
+      focusRequest.node_ids.forEach((nid) => {
+        const found = cy.getElementById(nid);
+        if (found.length) target = target.add(found);
+      });
     }
+
+    // 2. Add single ID if provided
+    if (focusRequest.id) {
+      const found = cy.getElementById(focusRequest.id);
+      if (found.length) target = target.add(found);
+    }
+
+    // 3. Add any nodes matching vendor_ids array
+    if (focusRequest.vendor_ids && Array.isArray(focusRequest.vendor_ids)) {
+      focusRequest.vendor_ids.forEach((vid) => {
+        const found = cy.nodes().filter((n) => n.data("vendor_id") === vid);
+        if (found.length) target = target.add(found);
+      });
+    }
+
+    // 4. Add any nodes with matching username or label (case-insensitive)
+    const searchName = (focusRequest.username || focusRequest.label || "").trim().toLowerCase();
+    if (searchName) {
+      const matching = cy.nodes().filter((n) => {
+        const u = (n.data("username") || "").toLowerCase();
+        const l = (n.data("label") || "").toLowerCase();
+        return u === searchName || l === searchName;
+      });
+      if (matching.length) target = target.add(matching);
+    }
+
+    // 5. Fallback for normalized_value or identity_id
     if (!target.length && focusRequest.normalized_value) {
-      target = cy.nodes().filter((n) => n.data("normalized_value") === focusRequest.normalized_value);
+      const found = cy.nodes().filter((n) => n.data("normalized_value") === focusRequest.normalized_value);
+      if (found.length) target = target.add(found);
     }
     if (!target.length && focusRequest.identity_id) {
-      target = cy.nodes().filter((n) => n.data("identity_id") === focusRequest.identity_id);
-    }
-    if (!target.length && focusRequest.vendor_id) {
-      target = cy.nodes().filter((n) => n.data("vendor_id") === focusRequest.vendor_id);
+      const found = cy.nodes().filter((n) => n.data("identity_id") === focusRequest.identity_id);
+      if (found.length) target = target.add(found);
     }
 
     if (target.length) {
       focusedNodeRef.current = target;
 
-      // Highlight target and its immediate neighborhood persistently
+      // Highlight all persona nodes and their entire connected neighborhood across marketplaces!
       cy.nodes().removeClass("search-focused");
       cy.elements().removeClass("highlighted");
       const neighborhood = target.neighborhood().add(target);
@@ -400,18 +431,27 @@ const GraphView = ({
       neighborhood.removeClass("dimmed").addClass("highlighted");
       target.addClass("search-focused");
 
-      // Select target
+      // Select target collection
       cy.elements().unselect();
       target.select();
 
-      // Smooth camera pan & zoom directly to the located entity
+      // Smooth camera pan & fit to the complete unified cluster with optimal framing
       cy.stop(true, true);
-      cy.animate({
-        center: { eles: target },
-        zoom: 1.8,
-        duration: 500,
-        easing: "ease-in-out-cubic",
-      });
+      if (target.length > 1 || neighborhood.length > 4) {
+        cy.animate({
+          center: { eles: neighborhood },
+          fit: { eles: neighborhood, padding: 80 },
+          duration: 600,
+          easing: "ease-in-out-cubic",
+        });
+      } else {
+        cy.animate({
+          center: { eles: target },
+          zoom: 1.8,
+          duration: 500,
+          easing: "ease-in-out-cubic",
+        });
+      }
     }
   }, [focusRequest]);
 

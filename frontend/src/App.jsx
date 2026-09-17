@@ -11,6 +11,7 @@ import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import useDebounce from "./hooks/useDebounce";
 import {
+  ensureGraphNodes,
   fetchByPath,
   fetchGraph,
   fetchNodeDetailsById,
@@ -260,33 +261,45 @@ function App() {
       setActiveTab("graph");
     }
 
-    // Target node ID
-    const targetId = item.id || (item.vendor_id ? `vendor_${item.vendor_id}` : (item.identity_id ? `ident_${item.identity_id}` : null));
+    // Collect all counterpart node IDs for the unified persona
+    const targetIds = item.node_ids && item.node_ids.length > 0
+      ? item.node_ids
+      : (item.id ? [item.id] : []);
 
-    // If node is not currently in cy elements, reload graph
-    if (cy && targetId && !cy.getElementById(targetId).length) {
-      try {
-        const graphData = await fetchGraph(100, 0.0);
-        setGraph(graphData);
-      } catch (err) {
-        console.error("Failed refreshing graph for searched node", err);
+    const primaryTargetId = item.id || (item.vendor_id ? `vendor_${item.vendor_id}` : (item.identity_id ? `ident_${item.identity_id}` : null));
+
+    // Ensure all target nodes exist in the active graph
+    if (targetIds.length > 0) {
+      const missing = cy ? targetIds.some((nid) => !cy.getElementById(nid).length) : true;
+      if (missing) {
+        try {
+          const res = await ensureGraphNodes(targetIds);
+          if (res && res.added && res.graph) {
+            setGraph(res.graph);
+          }
+        } catch (err) {
+          console.error("Failed ensuring graph nodes", err);
+        }
       }
     }
 
     setFocusRequest({
-      id: targetId,
+      id: primaryTargetId,
+      node_ids: targetIds,
+      vendor_ids: item.vendor_ids || (item.vendor_id ? [item.vendor_id] : []),
       label: item.label,
+      username: item.username,
       type: item.type,
       normalized_value: item.normalized_value,
-      vendor_id: item.vendor_id,
+      vendor_id: item.vendor_id || item.primary_vendor_id,
       identity_id: item.identity_id,
       time: Date.now(),
     });
 
     await fetchNodeDetails({
       ...item,
-      id: targetId,
-      detail_url: item.detail_url || (item.vendor_id ? `/vendor/${item.vendor_id}` : (item.identity_id ? `/identity/${item.identity_id}` : null)),
+      id: primaryTargetId,
+      detail_url: item.detail_url || (item.vendor_id ? `/vendor/${item.vendor_id}` : (item.primary_vendor_id ? `/vendor/${item.primary_vendor_id}` : null)),
     });
   };
 

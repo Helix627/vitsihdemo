@@ -59,3 +59,18 @@ def get_path():
         return jsonify({"found": False, "path": [], "message": "No connecting path found."})
 
     return jsonify({"found": True, "path": path, "length": len(path) - 1})
+
+
+@graph_bp.route("/graph/ensure-nodes", methods=["POST"])
+def ensure_nodes():
+    """Ensure specific node IDs are present in the active knowledge graph."""
+    data = request.get_json() or {}
+    node_ids = data.get("node_ids", [])
+    added_any = False
+    for nid in node_ids:
+        if nid and NetworkXGraphEngine.ensure_node_in_graph(str(nid)):
+            added_any = True
+    if added_any:
+        cytoscape_data = CytoscapeSerializer.to_cytoscape_json(min_confidence=0.0)
+        return jsonify({"added": True, "graph": cytoscape_data})
+    return jsonify({"added": False})

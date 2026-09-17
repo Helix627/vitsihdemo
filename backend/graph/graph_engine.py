@@ -270,7 +270,7 @@ class NetworkXGraphEngine:
                     return False
                 v_name = vendor.get("user_name") or f"Vendor #{v_id}"
                 m_id = vendor.get("market_id") or 1
-                mkt_target = cls.MARKET_NODES.get(m_id, cls.MARKET_NODES[1])["id"]
+                mkt_target = cls._get_or_create_market_node(G, m_id)
 
                 G.add_node(
                     node_id,

@@ -40,6 +40,8 @@ class VendorRepository:
                 row["marketplace_name"] = VendorRepository.MARKET_NAMES.get(row.get("market_id"), "Darknet Market")
             return row
 
+    get_vendor_by_id = get_by_id
+
     @staticmethod
     def get_by_username(username: str) -> Optional[Dict[str, Any]]:
         query = "SELECT * FROM Vendors WHERE user_name = %s LIMIT 1"

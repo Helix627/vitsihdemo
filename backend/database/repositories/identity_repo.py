@@ -17,6 +17,8 @@ class IdentityRepository:
             cursor.execute(query, (identity_id,))
             return cursor.fetchone()
 
+    get_identity_by_id = get_by_id
+
     @staticmethod
     def find_by_type_and_value(identity_type: str, normalized_val: str) -> Optional[Dict[str, Any]]:
         query = "SELECT * FROM Identities WHERE identity_type = %s AND normalized_value = %s"

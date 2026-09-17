@@ -22,6 +22,11 @@ export const fetchStats = async () => {
   return response.data;
 };
 
+export const ensureGraphNodes = async (nodeIds) => {
+  const response = await api.post("/graph/ensure-nodes", { node_ids: nodeIds });
+  return response.data;
+};
+
 // ---- Phase 4: Timeline ----
 export const fetchTimelineRange = async () => {
   const response = await api.get("/api/v1/timeline/range");

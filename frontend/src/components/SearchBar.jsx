@@ -10,6 +10,12 @@ const SearchBar = ({
 }) => {
   const getSecondaryText = (item) => {
     if (item.type === "vendor") {
+      if (item.market_summary) {
+        return `🌐 ${item.market_summary}`;
+      }
+      if (item.marketplace_name) {
+        return `Marketplace: ${item.marketplace_name}`;
+      }
       return "Marketplace Vendor Root Persona";
     }
     if (item.type === "alias") {
@@ -30,10 +36,15 @@ const SearchBar = ({
     return "";
   };
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = (item) => {
+    const type = typeof item === "object" ? item.type : item;
+    if (type === "vendor") {
+      if (item && item.marketplaces && item.marketplaces.length > 1) {
+        return "PERSONA";
+      }
+      return "VENDOR";
+    }
     switch (type) {
-      case "vendor":
-        return "VENDOR";
       case "alias":
         return "ALIAS";
       case "username":
@@ -87,7 +98,7 @@ const SearchBar = ({
                     <span className="suggestion-label">{item.label}</span>
                     <span className="suggestion-subtext">{getSecondaryText(item)}</span>
                   </span>
-                  <span className={`pill ${item.type}`}>{getTypeLabel(item.type)}</span>
+                  <span className={`pill ${item.type}`}>{getTypeLabel(item)}</span>
                 </button>
               </li>
             ))}
