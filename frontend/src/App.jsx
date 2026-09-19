@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import ExportModal from "./components/ExportModal";
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
 import AnalystReviewPanel from "./components/AnalystReviewPanel";
+import InfrastructureDashboard from "./components/InfrastructureDashboard";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import useDebounce from "./hooks/useDebounce";
 import {
+  ensureGraphNodes,
   fetchByPath,
   fetchGraph,
   fetchNodeDetailsById,
@@ -98,19 +101,60 @@ function App() {
   const [theme, setTheme] = useState("dark");
   const [cy, setCy] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
+  // Phase 4: Timeline
+  const [timeRange, setTimeRange] = useState([null, null]);
+  // Phase 5: Export
+  const [exportOpen, setExportOpen] = useState(false);
+
+  // Dynamic Sidebar Resizing
+  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback(
+    (e) => {
+      if (isResizing) {
+        const newWidth = document.body.clientWidth - e.clientX - 28;
+        if (newWidth >= 300 && newWidth <= 760) {
+          setSidebarWidth(newWidth);
+          if (cy) cy.resize();
+        }
+      }
+    },
+    [isResizing, cy]
+  );
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [resize, stopResizing]);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedThreshold = useDebounce(confidenceThreshold, 200);
   const metrics = useMemo(
-    () => computeGraphMetrics(graph, confidenceThreshold),
-    [graph, confidenceThreshold]
+    () => computeGraphMetrics(graph, debouncedThreshold),
+    [graph, debouncedThreshold]
   );
 
   // Load complete graph data on initial mount or manual refresh
   const loadData = useCallback(async () => {
     setError("");
+    const [startTs, endTs] = timeRange;
     try {
       const [graphData, statsData, suggData] = await Promise.all([
-        fetchGraph(60, 0.0),
+        fetchGraph(60, 0.0, startTs, endTs),
         fetchStats(),
         fetch("/api/v1/identity/suggestions").then((r) => r.json()).catch(() => ({ suggestions: [] })),
       ]);
@@ -122,6 +166,17 @@ function App() {
       setError(message);
     } finally {
       setInitialLoading(false);
+    }
+  }, [timeRange]);
+
+  // Phase 4: Timeline range change handler — refetches graph with date filter
+  const handleTimelineChange = useCallback(async (startTs, endTs) => {
+    setTimeRange([startTs, endTs]);
+    try {
+      const graphData = await fetchGraph(60, 0.0, startTs, endTs);
+      setGraph(graphData);
+    } catch (err) {
+      console.error("Timeline graph reload failed:", err);
     }
   }, []);
 
@@ -144,7 +199,11 @@ function App() {
       setIsSearching(true);
       try {
         const result = await searchNodes(query);
-        const aliasItems = (result.aliases || result.vendors || []).map((item) => ({
+        const vendorItems = (result.vendors || []).map((item) => ({
+          ...item,
+          type: "vendor",
+        }));
+        const aliasItems = (result.aliases || []).map((item) => ({
           ...item,
           type: "alias",
         }));
@@ -165,7 +224,7 @@ function App() {
           type: "bitcoin",
         }));
 
-        setSuggestions([...aliasItems, ...userItems, ...pgpItems, ...emailItems, ...btcItems]);
+        setSuggestions([...vendorItems, ...aliasItems, ...userItems, ...pgpItems, ...emailItems, ...btcItems]);
       } catch {
         setSuggestions([]);
       } finally {
@@ -202,46 +261,58 @@ function App() {
       setActiveTab("graph");
     }
 
-    // If node is not currently in cy elements, reload graph
-    if (cy && !cy.getElementById(item.id).length) {
-      try {
-        const graphData = await fetchGraph(80, 0.0);
-        setGraph(graphData);
-      } catch (err) {
-        console.error("Failed refreshing graph for searched node", err);
+    // Collect all counterpart node IDs for the unified persona
+    const targetIds = item.node_ids && item.node_ids.length > 0
+      ? item.node_ids
+      : (item.id ? [item.id] : []);
+
+    const primaryTargetId = item.id || (item.vendor_id ? `vendor_${item.vendor_id}` : (item.identity_id ? `ident_${item.identity_id}` : null));
+
+    // Ensure all target nodes exist in the active graph
+    if (targetIds.length > 0) {
+      const missing = cy ? targetIds.some((nid) => !cy.getElementById(nid).length) : true;
+      if (missing) {
+        try {
+          const res = await ensureGraphNodes(targetIds);
+          if (res && res.added && res.graph) {
+            setGraph(res.graph);
+          }
+        } catch (err) {
+          console.error("Failed ensuring graph nodes", err);
+        }
       }
     }
 
     setFocusRequest({
-      id: item.id,
+      id: primaryTargetId,
+      node_ids: targetIds,
+      vendor_ids: item.vendor_ids || (item.vendor_id ? [item.vendor_id] : []),
       label: item.label,
+      username: item.username,
       type: item.type,
       normalized_value: item.normalized_value,
-      vendor_id: item.vendor_id,
+      vendor_id: item.vendor_id || item.primary_vendor_id,
       identity_id: item.identity_id,
       time: Date.now(),
     });
-    await fetchNodeDetails(item);
+
+    await fetchNodeDetails({
+      ...item,
+      id: primaryTargetId,
+      detail_url: item.detail_url || (item.vendor_id ? `/vendor/${item.vendor_id}` : (item.primary_vendor_id ? `/vendor/${item.primary_vendor_id}` : null)),
+    });
   };
 
   const handleFit = () => {
-    if (cy) cy.fit(cy.elements(), 50);
-  };
-
-  const handleResetZoom = () => {
     if (cy) {
-      cy.zoom(1);
-      cy.center();
+      cy.resize();
+      cy.stop(true, true);
+      cy.animate({
+        fit: { eles: cy.elements(), padding: 45 },
+        duration: 400,
+        easing: "ease-in-out-cubic",
+      });
     }
-  };
-
-  const handleExport = () => {
-    if (!cy) return;
-    const imageData = cy.png({ bg: "#0f172a", full: true, scale: 2 });
-    const link = document.createElement("a");
-    link.href = imageData;
-    link.download = "identity-resolution-graph.png";
-    link.click();
   };
 
   const handleFullscreen = () => {
@@ -255,6 +326,23 @@ function App() {
     graphRoot.requestFullscreen();
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSuggestions([]);
+    setSelectedNodeId("");
+    setSelectedData(null);
+    setFocusRequest(null);
+    if (cy) {
+      cy.elements().removeClass("dimmed").removeClass("highlighted").removeClass("search-focused");
+      cy.elements().unselect();
+      cy.stop(true, true);
+      cy.animate({
+        fit: { eles: cy.elements(), padding: 50 },
+        duration: 400,
+      });
+    }
+  };
+
   if (initialLoading) {
     return <Loading error={error} onRetry={loadData} />;
   }
@@ -266,14 +354,23 @@ function App() {
         onTabChange={setActiveTab}
         layout={layout}
         onLayoutChange={setLayout}
-        onFit={handleFit}
-        onResetZoom={handleResetZoom}
         onRefresh={loadData}
-        onExport={handleExport}
-        onFullscreen={handleFullscreen}
         theme={theme}
         onThemeToggle={() => setTheme((state) => (state === "light" ? "dark" : "light"))}
         pendingSuggestionsCount={pendingCount}
+        onOpenExport={() => setExportOpen(true)}
+        onTimelineChange={handleTimelineChange}
+        timeRange={timeRange}
+        onNewSuggestion={loadData}
+      />
+
+      {/* Phase 5 — Export Modal */}
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        timeRange={timeRange}
+        graphData={graph}
+        stats={stats}
       />
 
       {activeTab === "graph" && (
@@ -283,11 +380,19 @@ function App() {
           suggestions={suggestions}
           isSearching={isSearching}
           onSelectSuggestion={handleSuggestionSelect}
+          onClearSearch={handleClearSearch}
+          onFit={handleFit}
+          onFullscreen={handleFullscreen}
         />
       )}
 
       {activeTab === "graph" && (
-        <main className="graph-layout">
+        <main
+          className="graph-layout"
+          style={{
+            gridTemplateColumns: `minmax(0, 1fr) 8px ${sidebarWidth}px`,
+          }}
+        >
           <section className="graph-panel fade-in">
             <GraphView
               graph={graph}
@@ -297,14 +402,48 @@ function App() {
               onCyReady={setCy}
               selectedNodeId={selectedNodeId}
               focusRequest={focusRequest}
+              theme={theme}
             />
           </section>
 
-          <Sidebar
-            stats={{ ...stats, edges: metrics.visibleEdges }}
-            selectedData={selectedData}
-            metrics={metrics}
-            onSelectNode={handleSuggestionSelect}
+          {/* Drag Resizer Bar */}
+          <div
+            className={`layout-resizer ${isResizing ? "resizing" : ""}`}
+            onMouseDown={startResizing}
+            title="Drag to expand or shrink the Intelligence Metrics & Persona Inspector panel"
+          >
+            <div className="resizer-handle" />
+          </div>
+
+          <div style={{ width: `${sidebarWidth}px`, minWidth: 0 }}>
+            <Sidebar
+              stats={{ ...stats, edges: metrics.visibleEdges }}
+              selectedData={selectedData}
+              metrics={metrics}
+              onSelectNode={handleSuggestionSelect}
+              sidebarWidth={sidebarWidth}
+              onSetSidebarWidth={setSidebarWidth}
+            />
+          </div>
+        </main>
+      )}
+
+      {activeTab === "infrastructure" && (
+        <main className="analyzer-view-wrap fade-in">
+          <InfrastructureDashboard
+            onSelectVendor={(v) => {
+              setActiveTab("graph");
+              handleSuggestionSelect({ label: v, id: v, type: "vendor" });
+            }}
+            onViewInGraph={async (nodeId, vendorName) => {
+              setActiveTab("graph");
+              if (vendorName) {
+                handleSuggestionSelect({ label: vendorName, id: nodeId, type: "onion" });
+              } else {
+                setFocusRequest({ id: nodeId, time: Date.now() });
+              }
+            }}
+            onRefreshGraph={() => loadData()}
           />
         </main>
       )}

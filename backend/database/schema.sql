@@ -179,3 +179,57 @@ CREATE TABLE IF NOT EXISTS ground_truth_vendor_migrations (
     KEY idx_gt_agora (agora_vendor_id),
     KEY idx_gt_synth (synthetic_vendor_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 10. Tor Hidden Services (Infrastructure Layer)
+CREATE TABLE IF NOT EXISTS OnionServices (
+    service_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    onion_address VARCHAR(128) NOT NULL,
+    title VARCHAR(255) NULL,
+    server_banner VARCHAR(255) NULL,
+    favicon_hash VARCHAR(64) NULL,
+    status_page_exposed TINYINT(1) NOT NULL DEFAULT 0,
+    ssl_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    discovered_origin_ip VARCHAR(64) NULL,
+    attribution_confidence DECIMAL(5,4) NOT NULL DEFAULT 0.0000,
+    threat_level VARCHAR(32) NOT NULL DEFAULT 'SUSPECTED',
+    first_discovered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_scanned TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_onion_address (onion_address),
+    KEY idx_origin_ip (discovered_origin_ip),
+    KEY idx_threat_level (threat_level)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. Infrastructure Attribution Indicators
+CREATE TABLE IF NOT EXISTS InfrastructureIndicators (
+    indicator_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    service_id BIGINT NOT NULL,
+    indicator_type VARCHAR(64) NOT NULL,
+    indicator_value TEXT NOT NULL,
+    clearnet_ip VARCHAR(64) NULL,
+    clearnet_domain VARCHAR(255) NULL,
+    confidence_score DECIMAL(5,4) NOT NULL DEFAULT 1.0000,
+    asn VARCHAR(64) NULL,
+    isp VARCHAR(255) NULL,
+    country VARCHAR(64) NULL,
+    evidence JSON DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_ind_service (service_id),
+    KEY idx_ind_type (indicator_type),
+    KEY idx_ind_clearnet_ip (clearnet_ip),
+    CONSTRAINT fk_ind_service FOREIGN KEY (service_id) REFERENCES OnionServices(service_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Vendor to Infrastructure Mapping
+CREATE TABLE IF NOT EXISTS VendorInfrastructureMap (
+    map_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    vendor_id INT NOT NULL,
+    service_id BIGINT NOT NULL,
+    source_table VARCHAR(64) NOT NULL DEFAULT 'infrastructure_scan',
+    confidence_score DECIMAL(5,4) NOT NULL DEFAULT 1.0000,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_vendor_infra (vendor_id, service_id),
+    KEY idx_vim_infra_vendor (vendor_id),
+    KEY idx_vim_infra_service (service_id),
+    CONSTRAINT fk_vim_infra_vendor FOREIGN KEY (vendor_id) REFERENCES Vendors(vendor_id) ON DELETE CASCADE,
+    CONSTRAINT fk_vim_infra_service FOREIGN KEY (service_id) REFERENCES OnionServices(service_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

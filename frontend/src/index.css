@@ -1,22 +1,65 @@
 :root {
-  --bg-primary: #f8f9fa;
+  --bg-primary: #f1f5f9;
   --bg-secondary: #ffffff;
-  --text-primary: #1f2937;
-  --text-secondary: #5f6c7b;
-  --border-soft: #dbe4eb;
-  --shadow-soft: 0 18px 32px rgba(41, 61, 89, 0.12);
-  --vendor: #10b981;
-  --vendor-border: #059669;
-  --alias: #10b981;
-  --alias-border: #059669;
-  --pgp: #f97316;
-  --pgp-border: #c2410c;
+  --bg-card: #f8fafc;
+  --bg-hover: #e2e8f0;
+  --border-soft: #cbd5e1;
+  --border-active: #7c3aed;
+  --border-glow: rgba(124, 58, 237, 0.25);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 36px -4px rgba(15, 23, 42, 0.12);
+  
+  --brand-purple: #7c3aed;
+  --brand-purple-light: #8b5cf6;
+  --brand-cyan: #0284c7;
+  --brand-emerald: #059669;
+  --brand-amber: #d97706;
+  --brand-rose: #e11d48;
+
+  --vendor: #059669;
+  --alias: #059669;
+  --username: #7c3aed;
+  --pgp: #ea580c;
   --email: #0284c7;
-  --email-border: #0369a1;
-  --bitcoin: #f59e0b;
-  --bitcoin-border: #b45309;
-  --selected: #2563eb;
+  --bitcoin: #d97706;
+  --monero: #c2410c;
+  --selected: #7c3aed;
   --edge: #94a3b8;
+}
+
+body.dark {
+  --bg-primary: #080c16;
+  --bg-secondary: #0d1424;
+  --bg-card: #111a2e;
+  --bg-hover: #17223b;
+  --border-soft: rgba(148, 163, 184, 0.14);
+  --border-active: #a855f7;
+  --border-glow: rgba(168, 85, 247, 0.35);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --shadow-soft: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 50px -8px rgba(0, 0, 0, 0.7);
+
+  --brand-purple: #a855f7;
+  --brand-purple-light: #c084fc;
+  --brand-cyan: #38bdf8;
+  --brand-emerald: #10b981;
+  --brand-amber: #f59e0b;
+  --brand-rose: #f43f5e;
+
+  --vendor: #10b981;
+  --alias: #10b981;
+  --username: #8b5cf6;
+  --pgp: #f97316;
+  --email: #0284c7;
+  --bitcoin: #f59e0b;
+  --monero: #ea580c;
+  --selected: #a855f7;
+  --edge: #475569;
 }
 
 * {
@@ -25,22 +68,25 @@
 
 body {
   margin: 0;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-  background: radial-gradient(circle at 10% -10%, #e0f2f1, transparent 40%),
-    radial-gradient(circle at 90% 10%, #fff3e0, transparent 30%), var(--bg-primary);
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 body.dark {
-  --bg-primary: #0f172a;
-  --bg-secondary: #172033;
-  --text-primary: #e7eef9;
-  --text-secondary: #9bb0cb;
-  --border-soft: #2a3a57;
-  --shadow-soft: 0 22px 40px rgba(7, 12, 22, 0.5);
-  background: radial-gradient(circle at 10% -10%, #1f2937, transparent 40%),
-    radial-gradient(circle at 90% 10%, #2b1d14, transparent 30%), var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.08), transparent 35%),
+    radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.05), transparent 40%);
+}
+
+body:not(.dark) {
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(124, 58, 237, 0.04), transparent 35%),
+    radial-gradient(circle at 85% 20%, rgba(2, 132, 199, 0.04), transparent 40%);
 }
 
 #root {

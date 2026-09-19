@@ -199,11 +199,23 @@ class EvolutionEngine:
                         exact_match_reason = f"Exact {itype.upper()} Match ({row['value']}) with existing Vendor #{row['vendor_id']} ({row['user_name']})"
                         break
 
+        # Check for Explicit Analyst Direct Override Merge
+        if not matched_vendor_id and payload.get("force_merge"):
+            target_v_hint = payload.get("target_vendor_id") or payload.get("target_vendor")
+            if target_v_hint:
+                if str(target_v_hint).isdigit():
+                    v_obj = VendorRepository.get_vendor_by_id(int(target_v_hint))
+                else:
+                    v_obj = VendorRepository.get_by_username(str(target_v_hint))
+                if v_obj:
+                    matched_vendor_id = v_obj["vendor_id"]
+                    exact_match_reason = f"Analyst Direct Override Merge with Vendor #{v_obj['vendor_id']} ({v_obj['user_name']})"
+
         # ------------------------------------------------------------------
         # Branch A: Exact Match Found -> Stage 5 Evolution (Enrich Existing)
         # ------------------------------------------------------------------
         if matched_vendor_id is not None:
-            logger.info("Deterministic match found! Enriching existing Vendor #%d (%s)...", matched_vendor_id, exact_match_reason)
+            logger.info("Deterministic match / Analyst override found! Enriching existing Vendor #%d (%s)...", matched_vendor_id, exact_match_reason)
             new_nodes_created = 0
             existing_nodes_updated = 0
             relationships_created = 0
@@ -381,27 +393,55 @@ class EvolutionEngine:
             target_vendor = VendorRepository.get_by_username(target_vendor_name)
             target_vid = target_vendor["vendor_id"] if target_vendor else None
 
-            # 2. Store suggestion in `identity_suggestions`
+            # 2. Store or update suggestion in `identity_suggestions`
             with get_db_cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO identity_suggestions (
-                        source_vendor_id, target_vendor_id, source_username, target_username,
-                        confidence, decision_label, status, similarity_breakdown, suggested_reason
-                    ) VALUES (%s, %s, %s, %s, %s, %s, 'PENDING', %s, %s);
+                    SELECT suggestion_id FROM identity_suggestions
+                    WHERE status = 'PENDING' AND source_username = %s AND target_username = %s
+                    LIMIT 1;
                     """,
-                    (
-                        new_vid,
-                        target_vid,
-                        raw_username,
-                        target_vendor_name,
-                        best_conf,
-                        decision_label,
-                        json.dumps(best_match.get("breakdown", {})),
-                        f"Multi-attribute similarity: {best_match['confidence_percentage']}% ({decision_label})",
-                    ),
+                    (raw_username, target_vendor_name),
                 )
-                suggestion_id = cursor.lastrowid
+                existing_sugg = cursor.fetchone()
+
+                if existing_sugg:
+                    suggestion_id = existing_sugg["suggestion_id"]
+                    cursor.execute(
+                        """
+                        UPDATE identity_suggestions
+                        SET confidence = %s, decision_label = %s, similarity_breakdown = %s,
+                            suggested_reason = %s, created_at = CURRENT_TIMESTAMP
+                        WHERE suggestion_id = %s;
+                        """,
+                        (
+                            best_conf,
+                            decision_label,
+                            json.dumps(best_match.get("breakdown", {})),
+                            f"Multi-attribute similarity: {best_match['confidence_percentage']}% ({decision_label})",
+                            suggestion_id,
+                        ),
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO identity_suggestions (
+                            source_vendor_id, target_vendor_id, source_username, target_username,
+                            confidence, decision_label, status, similarity_breakdown, suggested_reason
+                        ) VALUES (%s, %s, %s, %s, %s, %s, 'PENDING', %s, %s);
+                        """,
+                        (
+                            new_vid,
+                            target_vid,
+                            raw_username,
+                            target_vendor_name,
+                            best_conf,
+                            decision_label,
+                            json.dumps(best_match.get("breakdown", {})),
+                            f"Multi-attribute similarity: {best_match['confidence_percentage']}% ({decision_label})",
+                        ),
+                    )
+                    suggestion_id = cursor.lastrowid
 
             NetworkXGraphEngine.build_graph()
 
@@ -738,9 +778,14 @@ class EvolutionEngine:
         with get_db_cursor() as cursor:
             cursor.execute(
                 """
-                SELECT * FROM identity_suggestions
-                WHERE status = 'PENDING'
-                ORDER BY confidence DESC, created_at DESC
+                SELECT s.* FROM identity_suggestions s
+                INNER JOIN (
+                    SELECT MAX(suggestion_id) as max_id
+                    FROM identity_suggestions
+                    WHERE status = 'PENDING'
+                    GROUP BY source_username, target_username
+                ) latest ON s.suggestion_id = latest.max_id
+                ORDER BY s.confidence DESC, s.created_at DESC
                 LIMIT %s OFFSET %s;
                 """,
                 (limit, offset),

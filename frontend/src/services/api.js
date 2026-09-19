@@ -1,15 +1,19 @@
 import axios from "axios";
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 const api = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: API_BASE_URL,
   timeout: 30000,
 });
 
-export const fetchGraph = async (limit, minConfidence = 0.0) => {
+export const fetchGraph = async (limit, minConfidence = 0.0, startTs = null, endTs = null) => {
   const response = await api.get("/graph", {
     params: {
       ...(limit ? { limit } : {}),
       ...(minConfidence > 0 ? { min_confidence: minConfidence } : {}),
+      ...(startTs ? { start_ts: startTs } : {}),
+      ...(endTs ? { end_ts: endTs } : {}),
     },
   });
   return response.data;
@@ -17,6 +21,68 @@ export const fetchGraph = async (limit, minConfidence = 0.0) => {
 
 export const fetchStats = async () => {
   const response = await api.get("/statistics");
+  return response.data;
+};
+
+export const ensureGraphNodes = async (nodeIds) => {
+  const response = await api.post("/graph/ensure-nodes", { node_ids: nodeIds });
+  return response.data;
+};
+
+// ---- Phase 4: Timeline ----
+export const fetchTimelineRange = async () => {
+  const response = await api.get("/api/v1/timeline/range");
+  return response.data;
+};
+
+export const fetchTimelineActivity = async (startTs, endTs) => {
+  const response = await api.get("/api/v1/timeline/activity", {
+    params: { start: startTs, end: endTs },
+  });
+  return response.data;
+};
+
+// ---- Phase 5: Export ----
+export const fetchExportPreview = async (startTs = null, endTs = null) => {
+  const response = await api.post("/api/v1/export/preview", {
+    ...(startTs ? { start_ts: startTs } : {}),
+    ...(endTs ? { end_ts: endTs } : {}),
+  });
+  return response.data;
+};
+
+export const downloadExportCSV = (startTs = null, endTs = null, limit = 5000) => {
+  const params = new URLSearchParams();
+  if (startTs) params.append("start_ts", startTs);
+  if (endTs) params.append("end_ts", endTs);
+  params.append("limit", limit);
+  window.open(`${API_BASE_URL}/api/v1/export/csv?${params}`, "_blank");
+};
+
+export const downloadExportJSON = (startTs = null, endTs = null) => {
+  const params = new URLSearchParams();
+  if (startTs) params.append("start_ts", startTs);
+  if (endTs) params.append("end_ts", endTs);
+  window.open(`${API_BASE_URL}/api/v1/export/json?${params}`, "_blank");
+};
+
+export const downloadGraphSnapshot = () => {
+  window.open(`${API_BASE_URL}/api/v1/export/graph-snapshot`, "_blank");
+};
+
+// ---- Autonomous Daemon API ----
+export const fetchAutonomousStatus = async () => {
+  const response = await api.get("/api/v1/autonomous/status");
+  return response.data;
+};
+
+export const toggleAutonomousEngine = async (enable = null) => {
+  const response = await api.post("/api/v1/autonomous/toggle", { enable });
+  return response.data;
+};
+
+export const triggerInstantScan = async () => {
+  const response = await api.post("/api/v1/autonomous/trigger");
   return response.data;
 };
 
@@ -134,5 +200,29 @@ export const rejectSuggestion = async (suggestionId, analystName = "Lead_Investi
 
 export const fetchVendorProvenance = async (vendorId) => {
   const response = await api.get(`/vendor/${vendorId}/provenance`);
+  return response.data;
+};
+
+export const fetchInfrastructureServices = async (limit = 50, offset = 0) => {
+  const response = await api.get("/api/v1/infrastructure/services", {
+    params: { limit, offset },
+  });
+  return response.data;
+};
+
+export const fetchInfrastructureDetail = async (serviceId) => {
+  const response = await api.get(`/api/v1/infrastructure/service/${serviceId}`);
+  return response.data;
+};
+
+export const correlateInfrastructure = async (query) => {
+  const response = await api.get("/api/v1/infrastructure/correlate", {
+    params: { q: query },
+  });
+  return response.data;
+};
+
+export const scanInfrastructure = async (payload) => {
+  const response = await api.post("/api/v1/infrastructure/scan", payload);
   return response.data;
 };

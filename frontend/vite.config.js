@@ -53,4 +53,22 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/cytoscape')) {
+            return 'vendor-cytoscape';
+          }
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/axios') || id.includes('node_modules/lucide-react')) {
+            return 'vendor-utils';
+          }
+        },
+      },
+    },
+  },
 })
