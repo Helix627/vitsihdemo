@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 const api = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: API_BASE_URL,
   timeout: 30000,
 });
 
@@ -54,18 +56,18 @@ export const downloadExportCSV = (startTs = null, endTs = null, limit = 5000) =>
   if (startTs) params.append("start_ts", startTs);
   if (endTs) params.append("end_ts", endTs);
   params.append("limit", limit);
-  window.open(`http://localhost:5000/api/v1/export/csv?${params}`, "_blank");
+  window.open(`${API_BASE_URL}/api/v1/export/csv?${params}`, "_blank");
 };
 
 export const downloadExportJSON = (startTs = null, endTs = null) => {
   const params = new URLSearchParams();
   if (startTs) params.append("start_ts", startTs);
   if (endTs) params.append("end_ts", endTs);
-  window.open(`http://localhost:5000/api/v1/export/json?${params}`, "_blank");
+  window.open(`${API_BASE_URL}/api/v1/export/json?${params}`, "_blank");
 };
 
 export const downloadGraphSnapshot = () => {
-  window.open("http://localhost:5000/api/v1/export/graph-snapshot", "_blank");
+  window.open(`${API_BASE_URL}/api/v1/export/graph-snapshot`, "_blank");
 };
 
 // ---- Autonomous Daemon API ----
