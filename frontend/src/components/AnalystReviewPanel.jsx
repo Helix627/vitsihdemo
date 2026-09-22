@@ -1,18 +1,28 @@
-import React, { useState, useEffect } from "react";
-import {
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  User,
-  ArrowRight,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+
+const noopIcon = () => null;
+const CheckCircle = noopIcon;
+const XCircle = noopIcon;
+const AlertTriangle = noopIcon;
+const Shield = noopIcon;
+const User = noopIcon;
+const ArrowRight = noopIcon;
+const RefreshCw = noopIcon;
+const Layers = noopIcon;
+const Sparkles = noopIcon;
+const GitMerge = noopIcon;
+const Search = noopIcon;
+const SlidersHorizontal = noopIcon;
+const Check = noopIcon;
+const X = noopIcon;
+const FileText = noopIcon;
+const Activity = noopIcon;
+const Zap = noopIcon;
 import {
   fetchSuggestions as apiFetchSuggestions,
   approveSuggestion as apiApproveSuggestion,
   rejectSuggestion as apiRejectSuggestion,
-} from "../services/api";
+} from '../services/api';
 
 export default function AnalystReviewPanel({
   onApproveSuccess,
@@ -23,6 +33,8 @@ export default function AnalystReviewPanel({
   const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const [reviewNotes, setReviewNotes] = useState({});
+  const [filterText, setFilterText] = useState('');
+  const [minConfFilter, setMinConfFilter] = useState(0.6);
   const [msg, setMsg] = useState(null);
 
   const fetchSuggestions = async () => {
@@ -31,7 +43,7 @@ export default function AnalystReviewPanel({
       const data = await apiFetchSuggestions(50, 0);
       setSuggestions(data.suggestions || []);
     } catch (err) {
-      console.error("Failed to fetch suggestions:", err);
+      console.error('Failed to fetch suggestions:', err);
     } finally {
       setLoading(false);
     }
@@ -45,20 +57,20 @@ export default function AnalystReviewPanel({
     setProcessingId(suggId);
     setMsg(null);
     try {
-      const notes = reviewNotes[suggId] || "Analyst confirmed identity match.";
-      const data = await apiApproveSuggestion(suggId, "Lead_Investigator", notes);
+      const notes = reviewNotes[suggId] || 'Analyst confirmed identity match.';
+      const data = await apiApproveSuggestion(suggId, 'Lead_Investigator', notes);
       if (data.success) {
-        setMsg({ type: "success", text: data.message });
+        setMsg({ type: 'success', text: data.message || 'Identity clusters successfully unified.' });
         setSuggestions((prev) => prev.filter((s) => s.suggestion_id !== suggId));
         if (onApproveSuccess) onApproveSuccess(data);
         if (onRefreshGraph) onRefreshGraph();
       } else {
-        setMsg({ type: "error", text: data.error || "Approval failed" });
+        setMsg({ type: 'error', text: data.error || 'Approval failed' });
       }
     } catch (err) {
       const errorMsg =
-        err?.response?.data?.error || err.message || "Network error during approval";
-      setMsg({ type: "error", text: errorMsg });
+        err?.response?.data?.error || err.message || 'Network error during approval';
+      setMsg({ type: 'error', text: errorMsg });
     } finally {
       setProcessingId(null);
     }
@@ -68,193 +80,872 @@ export default function AnalystReviewPanel({
     setProcessingId(suggId);
     setMsg(null);
     try {
-      const notes = reviewNotes[suggId] || "Analyst rejected match; distinct personas.";
-      const data = await apiRejectSuggestion(suggId, "Lead_Investigator", notes);
+      const notes =
+        reviewNotes[suggId] || 'Analyst rejected match; distinct darknet actors.';
+      const data = await apiRejectSuggestion(suggId, 'Lead_Investigator', notes);
       if (data.success) {
-        setMsg({ type: "info", text: data.message });
+        setMsg({ type: 'info', text: data.message || 'Candidate correlation dismissed.' });
         setSuggestions((prev) => prev.filter((s) => s.suggestion_id !== suggId));
         if (onRejectSuccess) onRejectSuccess(data);
       } else {
-        setMsg({ type: "error", text: data.error || "Rejection failed" });
+        setMsg({ type: 'error', text: data.error || 'Rejection failed' });
       }
     } catch (err) {
       const errorMsg =
-        err?.response?.data?.error || err.message || "Network error during rejection";
-      setMsg({ type: "error", text: errorMsg });
+        err?.response?.data?.error || err.message || 'Network error during rejection';
+      setMsg({ type: 'error', text: errorMsg });
     } finally {
       setProcessingId(null);
     }
   };
 
+  const filteredSuggestions = suggestions.filter((s) => {
+    const conf = s.confidence || 0;
+    if (conf < minConfFilter) return false;
+    if (!filterText) return true;
+    const term = filterText.toLowerCase();
+    return (
+      (s.source_username || '').toLowerCase().includes(term) ||
+      (s.target_username || '').toLowerCase().includes(term) ||
+      (s.suggested_reason || '').toLowerCase().includes(term) ||
+      (s.decision_label || '').toLowerCase().includes(term)
+    );
+  });
+
+  const highConfCount = suggestions.filter((s) => (s.confidence || 0) >= 0.8).length;
+  const modConfCount = suggestions.filter(
+    (s) => (s.confidence || 0) >= 0.6 && (s.confidence || 0) < 0.8
+  ).length;
+
   return (
-    <div className="review-console-card">
-      {/* Header */}
-      <div className="review-header">
-        <div className="review-header-left">
-          <div className="review-icon-wrap">
-            <AlertTriangle className="w-5 h-5" />
+    <div
+      style={{
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border-soft)',
+        borderRadius: '18px',
+        boxShadow: 'var(--shadow-soft)',
+        padding: '24px',
+        color: 'var(--text-primary)',
+        width: '100%',
+        maxWidth: '1280px',
+        margin: '0 auto',
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* Top Header & Overview KPIs */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid var(--border-soft)',
+          marginBottom: '20px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div
+            style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.05))',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#f59e0b',
+            }}
+          >
+            <GitMerge style={{ width: '22px', height: '22px' }} />
           </div>
           <div>
-            <div className="review-title-row">
-              <h2 className="review-title">Analyst Review Console</h2>
-              <span className="pending-badge">
-                {suggestions.length} Pending
+            <h2
+              style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              Probabilistic Adjudication Console
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  color: '#f59e0b',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  fontWeight: 600,
+                  fontFamily: 'monospace',
+                }}
+              >
+                {suggestions.length} In Queue
               </span>
-            </div>
-            <p className="review-subtitle">
-              Review and adjudicate AI-suggested candidate identity mergers (Confidence 60% – 95%).
+            </h2>
+            <p
+              style={{
+                margin: '4px 0 0',
+                fontSize: '0.82rem',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              Human-in-the-loop review for moderate confidence candidate merges (60% – 95%) resolved via stylometry & embeddings.
             </p>
           </div>
         </div>
-        <button
-          onClick={fetchSuggestions}
-          disabled={loading}
-          className="btn-secondary"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+
+        {/* Quick KPI Badges & Refresh */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'var(--bg-primary)',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-soft)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+            }}
+          >
+            <span style={{ color: '#10b981' }}>●</span> {highConfCount} High (≥80%)
+            <span style={{ color: 'var(--border-soft)', margin: '0 4px' }}>|</span>
+            <span style={{ color: '#f59e0b' }}>●</span> {modConfCount} Moderate (60-79%)
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchSuggestions}
+            disabled={loading}
+            className="btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.8rem',
+              padding: '7px 14px',
+            }}
+          >
+            <RefreshCw
+              style={{
+                width: '14px',
+                height: '14px',
+                animation: loading ? 'spin 1s linear infinite' : 'none',
+              }}
+            />
+            {loading ? 'Refreshing...' : 'Refresh Queue'}
+          </button>
+        </div>
       </div>
 
-      {/* Notification banner */}
+      {/* Filter & Search Bar */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          marginBottom: '20px',
+          background: 'var(--bg-primary)',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          border: '1px solid var(--border-soft)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flex: '1 1 250px',
+            background: 'var(--bg-secondary)',
+            padding: '6px 12px',
+            borderRadius: '8px',
+            border: '1px solid var(--border-soft)',
+          }}
+        >
+          <Search style={{ width: '15px', height: '15px', color: 'var(--text-secondary)' }} />
+          <input
+            type="text"
+            placeholder="Filter candidates by handle, reason, or label..."
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            style={{
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              color: 'var(--text-primary)',
+              fontSize: '0.84rem',
+              width: '100%',
+            }}
+          />
+          {filterText && (
+            <button
+              type="button"
+              onClick={() => setFilterText('')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                padding: '2px',
+              }}
+            >
+              <X style={{ width: '14px', height: '14px' }} />
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <SlidersHorizontal
+            style={{ width: '14px', height: '14px', color: 'var(--text-secondary)' }}
+          />
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+            Min Confidence:
+          </span>
+          <select
+            value={minConfFilter}
+            onChange={(e) => setMinConfFilter(parseFloat(e.target.value))}
+            className="layout-select"
+            style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+          >
+            <option value="0.60">≥ 60% (All Candidates)</option>
+            <option value="0.70">≥ 70% (Probable)</option>
+            <option value="0.80">≥ 80% (High Confidence)</option>
+            <option value="0.90">≥ 90% (Near Deterministic)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Notification Toast Banner */}
       {msg && (
-        <div className={`notification-banner ${msg.type}`}>
-          {msg.type === "success" ? (
-            <CheckCircle className="w-4 h-4" />
+        <div
+          style={{
+            padding: '12px 16px',
+            borderRadius: '10px',
+            fontSize: '0.84rem',
+            fontWeight: 500,
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background:
+              msg.type === 'success'
+                ? 'rgba(16, 185, 129, 0.12)'
+                : msg.type === 'error'
+                ? 'rgba(239, 68, 68, 0.12)'
+                : 'rgba(6, 182, 212, 0.12)',
+            border:
+              msg.type === 'success'
+                ? '1px solid rgba(16, 185, 129, 0.35)'
+                : msg.type === 'error'
+                ? '1px solid rgba(239, 68, 68, 0.35)'
+                : '1px solid rgba(6, 182, 212, 0.35)',
+            color:
+              msg.type === 'success'
+                ? '#10b981'
+                : msg.type === 'error'
+                ? '#ef4444'
+                : '#06b6d4',
+          }}
+        >
+          {msg.type === 'success' ? (
+            <CheckCircle style={{ width: '18px', height: '18px', flexShrink: 0 }} />
           ) : (
-            <AlertTriangle className="w-4 h-4" />
+            <AlertTriangle style={{ width: '18px', height: '18px', flexShrink: 0 }} />
           )}
           <span>{msg.text}</span>
         </div>
       )}
 
       {/* Empty State */}
-      {suggestions.length === 0 && !loading && (
-        <div className="review-empty-box">
-          <CheckCircle className="review-empty-icon" />
-          <h3 className="review-empty-title">No Pending Suggestions</h3>
-          <p className="review-empty-desc">
-            All candidate identity linkages have been resolved or auto-merged by the continuous intelligence pipeline.
+      {filteredSuggestions.length === 0 && !loading && (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '48px 24px',
+            borderRadius: '14px',
+            border: '1px dashed var(--border-soft)',
+            background: 'var(--bg-primary)',
+          }}
+        >
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px',
+              color: '#10b981',
+            }}
+          >
+            <Shield style={{ width: '28px', height: '28px' }} />
+          </div>
+          <h3
+            style={{
+              margin: '0 0 6px',
+              fontSize: '1.05rem',
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            {suggestions.length === 0 ? 'Adjudication Queue Empty' : 'No Matches for Current Filter'}
+          </h3>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.82rem',
+              color: 'var(--text-secondary)',
+              maxWidth: '460px',
+              marginInline: 'auto',
+            }}
+          >
+            {suggestions.length === 0
+              ? 'All probabilistic candidate personas have been adjudicated. High confidence records are automatically merged by the graph engine.'
+              : 'Try lowering the minimum confidence threshold or clearing search terms to view remaining candidates.'}
           </p>
         </div>
       )}
 
       {/* Suggestions List */}
-      <div className="suggestions-list">
-        {suggestions.map((s) => {
-          const confPct = Math.round((s.confidence || 0) * 100);
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {filteredSuggestions.map((s) => {
+          const conf = s.confidence || 0;
+          const confPct = Math.round(conf * 100);
           const bd = s.similarity_breakdown || {};
           const isHigh = confPct >= 80;
 
+          const usernameSim = Math.round((bd.username_similarity || bd.alias_similarity || 0) * 100);
+          const behaviorSim = Math.round((bd.behavior_similarity || bd.behavioral_similarity || 0) * 100);
+          const stylometrySim = Math.round((bd.stylometry_similarity || bd.stylometric_similarity || 0) * 100);
+          const embeddingSim = Math.round((bd.embedding_similarity || 0) * 100);
+
           return (
-            <div key={s.suggestion_id} className="suggestion-card">
-              <div className="suggestion-card-header">
-                {/* Persona Comparison */}
-                <div className="persona-pair">
-                  <div className="persona-pill src">
-                    <User className="w-4 h-4 text-cyan" />
-                    <span className="persona-name">{s.source_username}</span>
+            <div
+              key={s.suggestion_id}
+              style={{
+                background: 'var(--bg-primary)',
+                border: isHigh
+                  ? '1px solid rgba(245, 158, 11, 0.4)'
+                  : '1px solid var(--border-soft)',
+                borderRadius: '14px',
+                padding: '20px',
+                boxShadow: 'var(--shadow-soft)',
+                transition: 'border-color 0.2s ease, transform 0.2s ease',
+              }}
+            >
+              {/* Persona Comparison Row */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '14px',
+                  paddingBottom: '16px',
+                  borderBottom: '1px solid var(--border-soft)',
+                }}
+              >
+                {/* Left & Right Actor Visual Matchup */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'var(--bg-secondary)',
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--border-soft)',
+                    }}
+                  >
+                    <User style={{ width: '16px', height: '16px', color: '#06b6d4' }} />
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          color: 'var(--text-secondary)',
+                          display: 'block',
+                          fontWeight: 700,
+                        }}
+                      >
+                        Source Ingest Persona
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          fontSize: '0.92rem',
+                          color: '#06b6d4',
+                        }}
+                      >
+                        {s.source_username}
+                      </span>
+                    </div>
                   </div>
 
-                  <ArrowRight className="w-4 h-4 text-muted shrink-0" />
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0 4px',
+                    }}
+                  >
+                    <ArrowRight
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        color: isHigh ? '#f59e0b' : 'var(--text-secondary)',
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: '0.62rem',
+                        fontFamily: 'monospace',
+                        color: 'var(--text-secondary)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      CORRELATION
+                    </span>
+                  </div>
 
-                  <div className="persona-pill tgt">
-                    <User className="w-4 h-4 text-purple" />
-                    <span className="persona-name">{s.target_username}</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'var(--bg-secondary)',
+                      padding: '8px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--border-soft)',
+                    }}
+                  >
+                    <User style={{ width: '16px', height: '16px', color: '#a855f7' }} />
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          color: 'var(--text-secondary)',
+                          display: 'block',
+                          fontWeight: 700,
+                        }}
+                      >
+                        Existing Graph Actor
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          fontSize: '0.92rem',
+                          color: '#a855f7',
+                        }}
+                      >
+                        {s.target_username}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Confidence Badge */}
-                <div className="confidence-meter">
-                  <div className="text-right">
-                    <div className="conf-label">
-                      {s.decision_label || (isHigh ? "Likely" : "Possible")} Match
-                    </div>
-                    <div
-                      className={`conf-value-big ${
-                        isHigh ? "text-amber" : "text-cyan"
-                      }`}
+                {/* Confidence Badge & Decision Label */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ textAlign: 'right' }}>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: 'var(--text-secondary)',
+                        display: 'block',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {s.decision_label || (isHigh ? 'High Probability' : 'Possible Link')}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: '1.25rem',
+                        fontWeight: 800,
+                        color: isHigh ? '#f59e0b' : '#06b6d4',
+                      }}
                     >
                       {confPct}% Confidence
-                    </div>
+                    </span>
                   </div>
                   <div
-                    className={`conf-bar-indicator ${
-                      isHigh ? "bg-amber" : "bg-cyan"
-                    }`}
+                    style={{
+                      width: '6px',
+                      height: '38px',
+                      borderRadius: '4px',
+                      background: isHigh
+                        ? 'linear-gradient(to bottom, #f59e0b, #d97706)'
+                        : 'linear-gradient(to bottom, #06b6d4, #0284c7)',
+                    }}
                   />
                 </div>
               </div>
 
-              {/* 4-Stage Similarity Breakdown */}
-              <div className="stage-breakdown-grid">
-                <div className="breakdown-box">
-                  <span className="breakdown-label">Stage 2: Username</span>
-                  <span className="breakdown-val">
-                    {Math.round(
-                      (bd.username_similarity || bd.alias_similarity || 0) * 100
-                    )}
-                    %
+              {/* Rationale / Evidence Note */}
+              {s.suggested_reason && (
+                <div
+                  style={{
+                    margin: '14px 0 10px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-soft)',
+                    fontSize: '0.78rem',
+                    color: 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Sparkles style={{ width: '14px', height: '14px', color: '#f59e0b', flexShrink: 0 }} />
+                  <span>
+                    <strong style={{ color: 'var(--text-primary)' }}>Heuristic Reason:</strong>{' '}
+                    {s.suggested_reason}
                   </span>
                 </div>
-                <div className="breakdown-box">
-                  <span className="breakdown-label">Stage 3: Behaviour</span>
-                  <span className="breakdown-val">
-                    {Math.round(
-                      (bd.behavior_similarity || bd.behavioral_similarity || 0) * 100
-                    )}
-                    %
-                  </span>
+              )}
+
+              {/* 5-Stage Multi-Feature Similarity Breakdown */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: '10px',
+                  margin: '14px 0',
+                }}
+              >
+                {/* Stage 2: Username */}
+                <div
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-soft)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      Handle Fuzzy Match
+                    </span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                      {usernameSim}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: 'rgba(100, 116, 139, 0.2)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${usernameSim}%`,
+                        background: '#06b6d4',
+                        borderRadius: '2px',
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="breakdown-box">
-                  <span className="breakdown-label">Stage 4: Stylometry</span>
-                  <span className="breakdown-val">
-                    {Math.round(
-                      (bd.stylometry_similarity || bd.stylometric_similarity || 0) * 100
-                    )}
-                    %
-                  </span>
+
+                {/* Stage 3: Behavior */}
+                <div
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-soft)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      Behavioral Heuristics
+                    </span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                      {behaviorSim}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: 'rgba(100, 116, 139, 0.2)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${behaviorSim}%`,
+                        background: '#10b981',
+                        borderRadius: '2px',
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="breakdown-box">
-                  <span className="breakdown-label">Stage 4: Embeddings</span>
-                  <span className="breakdown-val">
-                    {Math.round((bd.embedding_similarity || 0) * 100)}%
-                  </span>
+
+                {/* Stage 4: Stylometry */}
+                <div
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-soft)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      Stylometric Vector (11-d)
+                    </span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                      {stylometrySim}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: 'rgba(100, 116, 139, 0.2)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${stylometrySim}%`,
+                        background: '#a855f7',
+                        borderRadius: '2px',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stage 4: Embeddings */}
+                <div
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-soft)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      Neural Embeddings (384-d)
+                    </span>
+                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                      {embeddingSim}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: 'rgba(100, 116, 139, 0.2)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${embeddingSim}%`,
+                        background: '#3b82f6',
+                        borderRadius: '2px',
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Review notes input & Action buttons */}
-              <div className="suggestion-action-row">
-                <input
-                  type="text"
-                  placeholder="Optional analyst adjudication rationale or case notes..."
-                  value={reviewNotes[s.suggestion_id] || ""}
-                  onChange={(e) =>
-                    setReviewNotes({
-                      ...reviewNotes,
-                      [s.suggestion_id]: e.target.value,
-                    })
-                  }
-                  className="form-input review-input"
-                />
+              {/* Analyst Case Notes & Action Controls */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  paddingTop: '10px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flex: '1 1 300px',
+                    background: 'var(--bg-secondary)',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-soft)',
+                  }}
+                >
+                  <FileText
+                    style={{
+                      width: '14px',
+                      height: '14px',
+                      color: 'var(--text-secondary)',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Case notes / justification rationale for this merge decision..."
+                    value={reviewNotes[s.suggestion_id] || ''}
+                    onChange={(e) =>
+                      setReviewNotes({ ...reviewNotes, [s.suggestion_id]: e.target.value })
+                    }
+                    style={{
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.82rem',
+                      width: '100%',
+                    }}
+                  />
+                </div>
 
-                <div className="action-buttons-group">
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                  }}
+                >
                   <button
+                    type="button"
                     onClick={() => handleReject(s.suggestion_id)}
                     disabled={processingId === s.suggestion_id}
-                    className="btn-reject"
+                    className="btn"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: '#ef4444',
+                      borderColor: 'rgba(239, 68, 68, 0.3)',
+                      background: 'rgba(239, 68, 68, 0.06)',
+                      fontSize: '0.82rem',
+                      padding: '8px 16px',
+                    }}
                   >
-                    <XCircle className="w-3.5 h-3.5" />
-                    Reject
+                    <X style={{ width: '14px', height: '14px' }} />
+                    Reject Match
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => handleApprove(s.suggestion_id)}
                     disabled={processingId === s.suggestion_id}
-                    className="btn-approve"
+                    className="btn"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      color: '#ffffff',
+                      borderColor: 'transparent',
+                      fontSize: '0.82rem',
+                      padding: '8px 18px',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                    }}
                   >
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Approve Merge
+                    <Check style={{ width: '14px', height: '14px' }} />
+                    {processingId === s.suggestion_id ? 'Merging...' : 'Approve & Merge'}
                   </button>
                 </div>
               </div>
@@ -265,3 +956,4 @@ export default function AnalystReviewPanel({
     </div>
   );
 }
+

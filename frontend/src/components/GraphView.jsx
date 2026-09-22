@@ -67,29 +67,29 @@ const EDGE_STYLES = [
 const getLayoutConfig = (layoutName, nodeCount = 0) => {
   if (layoutName === "cose" || !layoutName) {
     // Adaptive iterations: fewer for larger graphs to avoid cose hanging the browser
-    const numIter = nodeCount > 200 ? 150 : nodeCount > 100 ? 250 : 400;
+    const numIter = nodeCount > 200 ? 180 : nodeCount > 100 ? 250 : 400;
     return {
       name: "cose",
       animate: false,
       fit: true,
-      padding: 45,
+      padding: 55,
       randomize: false,
       nodeRepulsion: (node) => {
         const type = node.data("type");
-        if (type === "marketplace") return 8000;
-        if (type === "vendor") return 5000;
-        return 3500;
+        if (type === "marketplace") return 85000;
+        if (type === "vendor") return 45000;
+        return 28000;
       },
       idealEdgeLength: (edge) => {
         const rel = edge.data("relation");
-        if (rel === "LISTED_ON") return 90;
-        if (rel === "RESOLVES_TO_ORIGIN" || rel === "HOSTED_ON") return 75;
-        if (rel === "SAME_AS" || rel === "SUGGESTION") return 65;
-        return 55;
+        if (rel === "LISTED_ON") return 120;
+        if (rel === "RESOLVES_TO_ORIGIN" || rel === "HOSTED_ON") return 95;
+        if (rel === "SAME_AS" || rel === "SUGGESTION") return 80;
+        return 65;
       },
-      edgeElasticity: () => 32,
+      edgeElasticity: () => 24,
       nestingFactor: 1.0,
-      gravity: 0.75,
+      gravity: 0.35,
       gravityRange: 3.8,
       numIter,
       initialTemp: 1000,
@@ -152,6 +152,8 @@ const GraphView = ({
   const containerRef = useRef(null);
   const cyRef = useRef(null);
   const focusedNodeRef = useRef(null);
+  const activeLayoutRef = useRef(null);
+  const isFirstMountRef = useRef(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -190,19 +192,25 @@ const GraphView = ({
             "line-color": isDark ? "#475569" : "#94a3b8",
             "target-arrow-color": isDark ? "#475569" : "#94a3b8",
             "target-arrow-shape": "triangle",
-            "arrow-scale": 0.85,
+            "arrow-scale": 0.8,
+          },
+        },
+        {
+          selector: "edge:selected, edge.highlighted",
+          style: {
             label: "data(label)",
             "font-size": "9px",
-            "font-weight": 500,
+            "font-weight": 600,
             color: isDark ? "#cbd5e1" : "#475569",
             "text-rotation": "autorotate",
-            "text-background-opacity": 0.85,
+            "text-background-opacity": 0.9,
             "text-background-color": isDark ? "#0f172a" : "#ffffff",
             "text-background-padding": 2,
             "text-background-shape": "roundrectangle",
-            "text-border-opacity": 0.4,
+            "text-border-opacity": 0.5,
             "text-border-width": 1,
-            "text-border-color": isDark ? "#334155" : "#e2e8f0",
+            "text-border-color": isDark ? "#8b5cf6" : "#cbd5e1",
+            "z-index": 999,
           },
         },
         ...EDGE_STYLES,
@@ -245,7 +253,6 @@ const GraphView = ({
         },
       ],
       layout: getLayoutConfig(layout, elements.length),
-      wheelSensitivity: 0.25,
       boxSelectionEnabled: false,
       textureOnViewport: true,
       hideEdgesOnViewport: true, // 60fps pan/zoom performance optimization
@@ -255,14 +262,20 @@ const GraphView = ({
     });
 
     cyRef.current = cy;
+    window.cy = cy;
     if (onCyReady) onCyReady(cy);
 
-    cy.ready(() => {
+    cy.on("layoutstart", (e) => {
+      activeLayoutRef.current = e.layout;
+    });
+
+    cy.on("layoutstop", () => {
+      activeLayoutRef.current = null;
       cy.resize();
       cy.fit(undefined, 45);
     });
 
-    cy.on("layoutstop", () => {
+    cy.ready(() => {
       cy.resize();
       cy.fit(undefined, 45);
     });
@@ -271,20 +284,24 @@ const GraphView = ({
     const applyPersistentHighlight = (node) => {
       if (!node || !node.length) return;
       focusedNodeRef.current = node;
-      cy.nodes().removeClass("search-focused");
-      cy.elements().removeClass("highlighted");
-      const neighborhood = node.neighborhood().add(node);
-      cy.elements().addClass("dimmed");
-      neighborhood.removeClass("dimmed").addClass("highlighted");
-      node.addClass("search-focused");
-      node.select();
+      cy.batch(() => {
+        cy.nodes().removeClass("search-focused");
+        cy.elements().removeClass("highlighted");
+        const neighborhood = node.neighborhood().add(node);
+        cy.elements().addClass("dimmed");
+        neighborhood.removeClass("dimmed").addClass("highlighted");
+        node.addClass("search-focused");
+        node.select();
+      });
     };
 
     // Clear all highlights
     const clearAllHighlights = () => {
       focusedNodeRef.current = null;
-      cy.elements().removeClass("dimmed").removeClass("highlighted").removeClass("search-focused");
-      cy.elements().unselect();
+      cy.batch(() => {
+        cy.elements().removeClass("dimmed").removeClass("highlighted").removeClass("search-focused");
+        cy.elements().unselect();
+      });
     };
 
     cy.on("tap", "node", (evt) => {
@@ -300,25 +317,40 @@ const GraphView = ({
       }
     });
 
-    // Temporary hover highlight
+    // Temporary hover highlight batched
     cy.on("mouseover", "node", (evt) => {
       const node = evt.target;
-      const neighborhood = node.neighborhood().add(node);
-      cy.elements().addClass("dimmed");
-      neighborhood.removeClass("dimmed").addClass("highlighted");
+      cy.batch(() => {
+        const neighborhood = node.neighborhood().add(node);
+        cy.elements().addClass("dimmed");
+        neighborhood.removeClass("dimmed").addClass("highlighted");
+      });
     });
 
-    // Restore persistent highlight on mouseout
+    // Restore persistent highlight on mouseout batched
     cy.on("mouseout", "node", () => {
-      if (focusedNodeRef.current && cy.getElementById(focusedNodeRef.current.id()).length) {
-        applyPersistentHighlight(focusedNodeRef.current);
-      } else {
-        cy.elements().removeClass("dimmed").removeClass("highlighted");
-      }
+      cy.batch(() => {
+        if (focusedNodeRef.current && cy.getElementById(focusedNodeRef.current.id()).length) {
+          applyPersistentHighlight(focusedNodeRef.current);
+        } else {
+          cy.elements().removeClass("dimmed").removeClass("highlighted");
+        }
+      });
     });
 
     return () => {
+      try {
+        if (activeLayoutRef.current) {
+          activeLayoutRef.current.stop();
+        }
+        cy.stop();
+        cy.elements().stop();
+      } catch (err) {}
       cy.destroy();
+      cyRef.current = null;
+      if (window.cy === cy) {
+        window.cy = null;
+      }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph, onNodeClick, onCyReady]);
@@ -353,12 +385,22 @@ const GraphView = ({
     });
   }, [confidenceThreshold]);
 
-  // Dynamic Layout Dispatcher
+  // Dynamic Layout Dispatcher (only when layout changes after initial mount)
   useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
     if (!cyRef.current) return;
     const cy = cyRef.current;
+    if (activeLayoutRef.current) {
+      try {
+        activeLayoutRef.current.stop();
+      } catch (err) {}
+    }
     const config = getLayoutConfig(layout, cy.nodes().length);
-    const l = cy.layout({ ...config, animate: true, animationDuration: 450 });
+    const l = cy.layout({ ...config, animate: false });
+    activeLayoutRef.current = l;
     l.run();
   }, [layout]);
 

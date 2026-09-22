@@ -1,0 +1,344 @@
+================================================================================
+🕶️ DARKNET THREAT ACTOR IDENTITY RESOLUTION PLATFORM
+   LIVE DEMONSTRATION TEST CASES & BENCHMARK PLAYBOOK
+================================================================================
+
+This document contains ready-to-copy sample test cases for every intake model,
+every resolution scenario, and every adjudication round.
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS:
+1. MODEL 1: RAW UNSTRUCTURED TEXT INTAKE
+   - Case 1A: 100% Deterministic Auto-Merge (Shared Bitcoin Wallet)
+   - Case 1B: 100% Deterministic Auto-Merge (Shared PGP Key)
+   - Case 1C: Probabilistic AI Match -> Suggestion Queue (Fuzzy Handle + Stylometry)
+   - Case 1D: Novel Threat Actor -> New Standalone Entity (<65% Confidence)
+   - Case 1E: Crypto Ransomware Extortion Note (Monero + Onion Contact)
+
+2. MODEL 2: STRUCTURED THREAT ACTOR DOSSIER (2-STEP INTAKE)
+   - Case 2A: Deterministic Auto-Merge Dossier (Agora Vendor #1 Mike)
+   - Case 2B: Probabilistic Suggestion Dossier (MagicHat SEO Variation)
+   - Case 2C: New Standalone Cluster Dossier (Bulletproof Hosting Persona)
+   - Case 2D: Multi-Currency Darknet Vendor Dossier (BTC + XMR + PGP)
+
+3. MODEL 3: BULK JSON DATASET INGESTION (MULTI-RECORD BATCHES)
+   - Batch 3A: Benchmark 3-Record Mixed Scenario (Auto-Merge + Suggestion + New)
+   - Batch 3B: 5-Record Comprehensive Darknet Threat Intelligence Dump
+   - Batch 3C: Selective Intake & Rejection Validation Batch
+
+4. MODEL 4: MULTI-MODAL IDENTITY SEARCH & DOSSIER RETRIEVAL
+   - Query 4A: High-Entropy Monero Stealth Wallet Address
+   - Query 4B: PGP 40-Hex Cryptographic Fingerprint
+   - Query 4C: Cross-Marketplace Alias / Fuzzy Handle
+   - Query 4D: Direct Marketplace Discovery Filter
+
+5. MODEL 5: ANALYST REVIEW QUEUE & GRAPH EVOLUTION VERIFICATION
+   - Round 5A: Adjudicate & Approve AI Suggestion (Green SAME_AS Edge)
+   - Round 5B: Split / Dismiss Non-Matching Actor Cluster
+================================================================================
+
+
+================================================================================
+1. MODEL 1: RAW UNSTRUCTURED TEXT INTAKE
+   (Navigate to: Intelligence Intake -> Sub-Tab 1: Raw Text Analysis)
+================================================================================
+
+--------------------------------------------------------------------------------
+[CASE 1A] 100% Deterministic Auto-Merge on Bitcoin Wallet
+Target: Links directly to Agora Vendor #1 (Mike)
+--------------------------------------------------------------------------------
+Vendor Alias: Mike_Backup_Node
+Marketplace: ShadowBay
+Status: Active Escrow Verified Vendor
+Bitcoin Deposit Wallet: 1b2cToQTkrmsDUUDeP6YDAK34wXuQ
+Contact Email: mike_backup_node@protonmail.com
+Telegram: @mike_darknet_direct
+Description: Official secondary backup store for Agora vendor Mike. All orders protected via multi-sig automated escrow. Stealth vacuum sealed shipping across EU and US.
+
+>> EXPECTED OUTPUT:
+   - Extracted Wallet: 1b2cToQTkrmsDUUDeP6YDAK34wXuQ
+   - Forecast: ⚡ 100.0% AUTO-MERGE with Vendor #1 (Mike)
+   - Reason: Exact 100% Deterministic Match on BITCOIN
+
+
+--------------------------------------------------------------------------------
+[CASE 1B] 100% Deterministic Auto-Merge on PGP Fingerprint
+Target: Links directly to Agora Vendor #1592 (TheRealSilkRoad)
+--------------------------------------------------------------------------------
+URGENT PGP SIGNED ADVISORY:
+To all darknet buyers: our primary marketplace listing has moved.
+PGP Key Fingerprint: 483F3631151FBA4895F9FF8404B63E9BA4772C78
+Contact: silkroad_ops@onionmail.org
+Backup Telegram: @silkroad_official_backup
+Always encrypt your delivery address with the above public key. Direct deals without PGP encryption will be ignored.
+
+>> EXPECTED OUTPUT:
+   - Extracted PGP: 483F3631151FBA4895F9FF8404B63E9BA4772C78
+   - Forecast: ⚡ 100.0% AUTO-MERGE with Vendor #1592 (TheRealSilkRoad)
+   - Reason: Exact 100% Deterministic Match on PGP
+
+
+--------------------------------------------------------------------------------
+[CASE 1C] Probabilistic AI Match -> Suggestion Queue
+Target: Matches Agora Vendor #1594 (MagicHat) at ~68.8% Composite Score
+--------------------------------------------------------------------------------
+Vendor Handle: m4gic_hat_seo
+Operating Network: ShadowBay Market & Dread Forum
+Contact: magichat_seo@safe-mail.net
+Deposit Address: 1MagicHatCustomWallet9999999999999
+Service Catalog:
+Professional darknet SEO optimization, high PR backlinks, domain authority boosting, and web traffic bot networks. Fast turnaround within 24 hours. Full refund guarantee if ranking metrics do not improve. FE required for new buyers.
+
+>> EXPECTED OUTPUT:
+   - Forecast: ⚖️ ~68.8% SUGGESTION (Pushed to Analyst Review Queue)
+   - Reason: Handle fuzzy match (94.5% Jaro-Winkler on 'm4gic_hat_seo' <-> 'MagicHat') + 11-d stylometry profile match + Behavioral escrow rules overlap
+
+
+--------------------------------------------------------------------------------
+[CASE 1D] Novel Threat Actor -> New Standalone Entity (<65%)
+Target: No prior match -> Autonomous Cluster Creation
+--------------------------------------------------------------------------------
+Threat Actor Handle: CyberNebula_ExploitBroker
+Contact: nebula_broker@tutanota.de
+Bitcoin Address: 1NebulaNovelWallet88888888888888888
+Monero Address: 888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkFxbTNsA2sPGLDctzU66W4sm2ghjWjBg63LJGkUhy6ugPrBBQD1ACYWVm5
+Description: Private zero-day broker for enterprise SCADA, industrial PLCs, and cloud hypervisors. Escrow accepted exclusively through designated multisig arbitration nodes. Minimum transaction size: 2.5 BTC.
+
+>> EXPECTED OUTPUT:
+   - Forecast: 🆕 NEW ENTITY (<65% Match Score)
+   - Action: Spawns a brand new isolated entity cluster in Knowledge Graph
+
+
+--------------------------------------------------------------------------------
+[CASE 1E] Crypto Ransomware Extortion Note
+Target: Automated entity extraction of Monero, BTC, PGP, and email
+--------------------------------------------------------------------------------
+ATTENTION: All your enterprise storage clusters have been encrypted with military-grade AES-256 and RSA-4096.
+To receive the decryption package, transfer 0.75 BTC to:
+Bitcoin: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq
+Monero: 44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGeiSTHzFcubDZmCo96hUoWDL14PBBCHnoFXcDpTX
+Send transaction hash and proof of payment to:
+Email: decryptor_ops@onionmail.org
+PGP Fingerprint: 994E8F231A4C5B6D7E8F901234567890ABCDEF12
+Telegram: @decryptor_support_bot
+You have 72 hours before encryption keys are permanently destroyed.
+
+>> EXPECTED OUTPUT:
+   - Entities Extracted: 1 BTC wallet, 1 Monero wallet, 1 PGP key, 1 Email, 1 Telegram
+   - Stylometric attribution breakdown showing slang & opsec density meters
+
+
+
+================================================================================
+2. MODEL 2: STRUCTURED THREAT ACTOR DOSSIER (2-STEP INTAKE)
+   (Navigate to: Intelligence Intake -> Sub-Tab 2: Threat Actor Dossier)
+================================================================================
+
+--------------------------------------------------------------------------------
+[CASE 2A] Deterministic Auto-Merge Dossier (Agora Vendor #1 Mike)
+--------------------------------------------------------------------------------
+Form Inputs:
+- Target Handle: Mike_ShadowBay_Drop
+- Email: mike_shadowbay@protonmail.com
+- Bitcoin Wallet: 1b2cToQTkrmsDUUDeP6YDAK34wXuQ
+- Monero Wallet: (leave empty)
+- PGP Fingerprint: (leave empty)
+- Telegram: @mike_drop_eu
+- Discord: mike_ops#1001
+- Forum Handle: mike_underground
+- Description: Agora seller official secondary logistics drop. Vacuum sealed packaging with next-day European dispatch.
+- Source Dataset: Interpol Intelligence Bulletin #88
+
+>> ACTION:
+   Click [1. Preview Dossier Linking & Validate] -> Card shows ⚡ 100.0% AUTO-MERGE
+   Click [2. Commit Dossier into Knowledge Graph] -> Cluster #1 enriched
+
+
+--------------------------------------------------------------------------------
+[CASE 2B] Probabilistic Suggestion Dossier (MagicHat SEO Variation)
+--------------------------------------------------------------------------------
+Form Inputs:
+- Target Handle: mag1c_hat_services
+- Email: magichat_seo@safe-mail.net
+- Bitcoin Wallet: 1BatchMagicHatWallet99999999999999
+- Monero Wallet: (leave empty)
+- PGP Fingerprint: (leave empty)
+- Telegram: @magichat_seo_tg
+- Discord: magichat#2026
+- Forum Handle: magichat_dread
+- Description: Professional darknet SEO services, high PR backlinks, domain authority boosting, web traffic bot networks. Fast turnaround within 24 hours. Full refund guarantee.
+- Source Dataset: ShadowBay OSINT Ingestion
+
+>> ACTION:
+   Click [1. Preview Dossier Linking & Validate] -> Card shows ⚖️ ~68.8% SUGGESTION
+   Click [2. Commit Dossier into Knowledge Graph] -> Pushed to Analyst Review Queue
+
+
+--------------------------------------------------------------------------------
+[CASE 2C] New Standalone Cluster Dossier
+--------------------------------------------------------------------------------
+Form Inputs:
+- Target Handle: Quantum_Bulletproof_Hosting
+- Email: quantum_bulletproof@cock.li
+- Bitcoin Wallet: 1QuantumNovelWallet33333333333333333
+- Monero Wallet: 888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkFxbTNsA2sPGLDctzU66W4sm2ghjWjBg63LJGkUhy6ugPrBBQD1ACYWVm5
+- PGP Fingerprint: 11223344556677889900AABBCCDDEEFF11223344
+- Telegram: @quantum_bulletproof
+- Discord: quantum_host#9999
+- Forum Handle: quantum_root
+- Description: High-speed offshore bulletproof servers, reverse proxy load balancers, DDoS mitigation, and anonymous DMCA ignored VPS hosting.
+- Source Dataset: CTI Feed #409
+
+>> ACTION:
+   Click [1. Preview Dossier Linking & Validate] -> Card shows 🆕 NEW PERSONA
+   Click [2. Commit Dossier into Knowledge Graph] -> Creates new node
+
+
+
+================================================================================
+3. MODEL 3: BULK JSON DATASET INGESTION (MULTI-RECORD BATCHES)
+   (Navigate to: Intelligence Intake -> Sub-Tab 3: Bulk Dataset)
+================================================================================
+
+--------------------------------------------------------------------------------
+[BATCH 3A] Benchmark 3-Record Mixed Batch (Copy & Paste JSON Array)
+--------------------------------------------------------------------------------
+[
+  {
+    "username": "mike_bulk_alias",
+    "email": "mike_batch@protonmail.com",
+    "bitcoin": "1b2cToQTkrmsDUUDeP6YDAK34wXuQ",
+    "telegram": "@mike_batch_node",
+    "description": "Agora vendor official backup node."
+  },
+  {
+    "username": "m4gic_hat_seo",
+    "email": "magichat_bulk@safe-mail.net",
+    "bitcoin": "1BatchMagicHatWallet99999999999999",
+    "telegram": "@magichat_bulk",
+    "description": "SEO services, high PR backlinks, domain authority boosting, web traffic bot networks. Fast turnaround within 24 hours."
+  },
+  {
+    "username": "cyber_nebula_broker",
+    "email": "nebula@onionmail.org",
+    "bitcoin": "1NebulaBatchWallet999999999999999",
+    "telegram": "@nebula_broker",
+    "description": "Novel private exploit brokerage for enterprise ERP frameworks."
+  }
+]
+
+>> EXPECTED RESOLUTION PREVIEW:
+   - Record #1: ⚡ AUTO-MERGE (100.0% match with Vendor #1 Mike)
+   - Record #2: ⚖️ SUGGESTION (~68.8% match with Vendor #1594 MagicHat)
+   - Record #3: 🆕 NEW ENTITY (Novel Cluster)
+
+>> INTERACTIVE CONTROLS TO DEMO:
+   - Click filter buttons: [All (3)] | [⚡ Auto-Merges (1)] | [⚖️ Suggestions (1)] | [🆕 New Personas (1)]
+   - Toggle individual record checkboxes [✓]
+   - Test "Ingest Only This" button on Record #1
+   - Test "Reject" button on Record #3 -> Turns to 🚫 Excluded
+   - Click "Commit Selected (X Records)"
+
+
+--------------------------------------------------------------------------------
+[BATCH 3B] 5-Record Comprehensive Darknet Dump (Copy & Paste JSON Array)
+--------------------------------------------------------------------------------
+[
+  {
+    "username": "SilkRoad_Special_Ops",
+    "email": "silkroad_eu@protonmail.com",
+    "pgp": "483F3631151FBA4895F9FF8404B63E9BA4772C78",
+    "telegram": "@silkroad_ops_2026",
+    "description": "Primary escrow seller for SilkRoad marketplace. Full stealth dispatch."
+  },
+  {
+    "username": "CardingKing_VIP",
+    "email": "cardingking@cock.li",
+    "monero": "44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGeiSTHzFcubDZmCo96hUoWDL14PBBCHnoFXcDpTX",
+    "telegram": "@cardingking_vip",
+    "description": "Verified merchant accounts, dumps with pins, and high-balance gift cards."
+  },
+  {
+    "username": "ZeroDay_Oracle_Exploits",
+    "email": "zeroday_oracle@onionmail.org",
+    "bitcoin": "1OracleZeroDayWallet77777777777777",
+    "telegram": "@zeroday_oracle",
+    "description": "Private exploit broker and source code vulnerability auditing service."
+  },
+  {
+    "username": "Magic_Hat_Backlinks",
+    "email": "magichat_backlinks@safe-mail.net",
+    "bitcoin": "1MagicHatBacklinksWallet5555555555",
+    "telegram": "@magichat_seo",
+    "description": "SEO services, high PR backlinks, domain authority boosting, web traffic bot networks."
+  },
+  {
+    "username": "PassMan_Secondary_Store",
+    "email": "passman_admin@yahoo.com",
+    "bitcoin": "1b2cToQTkrmsDUUDeP6YDAK34wXuQ",
+    "pgp": "2F4C5D998B102A3C4D5E6F7A8B9C0D1E2F3A4B5C",
+    "description": "★ PREMIUM CCcam Cardsharing Server ★ 12 Months full package for all Enigma2 decoders."
+  }
+]
+
+
+
+================================================================================
+4. MODEL 4: MULTI-MODAL IDENTITY SEARCH & DOSSIER RETRIEVAL
+   (Navigate to: Topbar Search Input or Cross-Marketplace Search Tab)
+================================================================================
+
+--------------------------------------------------------------------------------
+[QUERY 4A] Search by Monero Stealth Address
+--------------------------------------------------------------------------------
+Search Query: 44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7otXft3XjrpDtQGeiSTHzFcubDZmCo96hUoWDL14PBBCHnoFXcDpTX
+>> RESULT: Instantly retrieves threat actor profile, associated listings, and connected PGP keys.
+
+--------------------------------------------------------------------------------
+[QUERY 4B] Search by PGP Key Fingerprint
+--------------------------------------------------------------------------------
+Search Query: 483F3631151FBA4895F9FF8404B63E9BA4772C78
+>> RESULT: Locates SilkRoad vendor identity cluster across Agora and ShadowBay.
+
+--------------------------------------------------------------------------------
+[QUERY 4C] Search by Fuzzy Username
+--------------------------------------------------------------------------------
+Search Query: MagicHat
+>> RESULT: Matches `MagicHat`, `m4gic_hat_seo`, and related SEO aliases.
+
+--------------------------------------------------------------------------------
+[QUERY 4D] Search by Marketplace Identifier
+--------------------------------------------------------------------------------
+Search Query: Agora
+>> RESULT: Returns all active vendors and infrastructure connected to Marketplace #1 (Agora).
+
+
+
+================================================================================
+5. MODEL 5: ANALYST REVIEW QUEUE & GRAPH EVOLUTION VERIFICATION
+   (Navigate to: Review Suggestions / Analyst Review Panel)
+================================================================================
+
+--------------------------------------------------------------------------------
+[ROUND 5A] Adjudicate & Approve AI Suggestion (Live Graph Verification)
+--------------------------------------------------------------------------------
+1. In the Analyst Review Panel, inspect Suggestion #4:
+   - Source: ShadowBay Vendor #168279 (m4gic_hat_seo)
+   - Target: Agora Vendor #4 (MagicHat)
+   - Confidence: ~68.8%
+   - Forensic Reason: Handle Jaro-Winkler match (94.5%) + 11-d stylometry (74.0%) + Behavioral escrow overlap (100.0%)
+2. Click [Approve Merge]:
+   - Platform merges the personas into a single entity cluster.
+   - Graph automatically evolves: Cytoscape canvas renders a permanent solid green `SAME_AS` edge:
+     `ident_4 <---> ident_168279 (Weight: 1.0, Relation: SAME_AS)`
+
+--------------------------------------------------------------------------------
+[ROUND 5B] Split / Dismiss Non-Matching Actor
+--------------------------------------------------------------------------------
+1. Select any ambiguous suggestion card in the review queue.
+2. Click [Split] or [Dismiss].
+3. The platform permanently records the human adjudication decision and maintains both actors as isolated standalone entities in the Knowledge Graph.
+
+================================================================================
+END OF DEMO PLAYBOOK
+================================================================================

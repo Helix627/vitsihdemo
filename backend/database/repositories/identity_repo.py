@@ -75,12 +75,13 @@ class IdentityRepository:
 
     @staticmethod
     def search_identities(query_str: str, identity_type: Optional[str] = None, limit: int = 20) -> List[Dict[str, Any]]:
+        pattern = f"%{query_str}%"
         if identity_type:
-            query = "SELECT * FROM Identities WHERE identity_type = %s AND normalized_value LIKE %s LIMIT %s"
-            params = (identity_type, f"%{query_str}%", limit)
+            query = "SELECT * FROM Identities WHERE identity_type = %s AND (normalized_value LIKE %s OR value LIKE %s) LIMIT %s"
+            params = (identity_type, pattern, pattern, limit)
         else:
-            query = "SELECT * FROM Identities WHERE normalized_value LIKE %s LIMIT %s"
-            params = (f"%{query_str}%", limit)
+            query = "SELECT * FROM Identities WHERE normalized_value LIKE %s OR value LIKE %s LIMIT %s"
+            params = (pattern, pattern, limit)
 
         with get_db_cursor() as cursor:
             cursor.execute(query, params)

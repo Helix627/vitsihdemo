@@ -9,4 +9,5 @@ frontend/dist/
 .env
 .env.*
 .DS_Store
-Thumbs.db
+Thumbs.db
+data/main_db.sql

@@ -109,7 +109,7 @@ const AutonomousTicker = ({ onNewSuggestion }) => {
             <div className="autonomous-modal-header">
               <div>
                 <h3 className="autonomous-modal-title">
-                  🤖 Autonomous Intelligence Collector
+                  Autonomous Intelligence Collector
                 </h3>
                 <p className="autonomous-modal-subtitle">
                   Continuous darknet forum &amp; marketplace threat ingestion daemon (NTRO PS 26151)
@@ -149,7 +149,7 @@ const AutonomousTicker = ({ onNewSuggestion }) => {
                   className={`btn-drawer-toggle ${status.is_running ? "btn-pause" : "btn-start"}`}
                   onClick={handleToggle}
                 >
-                  {status.is_running ? "⏸️ Pause Ingestion Daemon" : "▶️ Resume Ingestion Daemon"}
+                  {status.is_running ? "Pause Ingestion Daemon" : "Resume Ingestion Daemon"}
                 </button>
                 <button
                   type="button"
@@ -157,13 +157,13 @@ const AutonomousTicker = ({ onNewSuggestion }) => {
                   onClick={handleManualTrigger}
                   disabled={triggering}
                 >
-                  {triggering ? "⚡ Ingesting Feed…" : "⚡ Trigger Instant Scan Pulse"}
+                  {triggering ? "Ingesting Feed…" : "Trigger Instant Scan Pulse"}
                 </button>
               </div>
 
               {/* Real-Time Stream */}
               <div className="drawer-feed-list">
-                <p className="feed-list-title">📡 Real-Time Autonomous Intelligence Stream:</p>
+                <p className="feed-list-title">Real-Time Autonomous Intelligence Stream:</p>
                 {status.recent_events && status.recent_events.length > 0 ? (
                   status.recent_events.map((ev, idx) => (
                     <div
@@ -174,10 +174,10 @@ const AutonomousTicker = ({ onNewSuggestion }) => {
                         <span className="feed-source">{ev.source}</span>
                         <span className={`feed-badge ${ev.status?.toLowerCase()}`}>
                           {ev.status === "AUTO_MERGED"
-                            ? "⚡ AUTO MERGED"
+                            ? "AUTO MERGED"
                             : ev.status === "QUEUED_FOR_REVIEW"
-                            ? "⚖️ REVIEW QUEUE"
-                            : "✨ NEW CLUSTER"}
+                            ? "REVIEW QUEUE"
+                            : "NEW CLUSTER"}
                         </span>
                       </div>
                       <p className="feed-reason">{ev.reason}</p>

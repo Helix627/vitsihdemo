@@ -54,10 +54,16 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('node_modules/three') || id.includes('node_modules/three-spritetext')) {
+            return 'vendor-three';
+          }
+          if (id.includes('node_modules/react-force-graph') || id.includes('node_modules/react-force-graph-3d') || id.includes('node_modules/3d-force-graph') || id.includes('node_modules/d3-force-3d')) {
+            return 'vendor-force-graph';
+          }
           if (id.includes('node_modules/cytoscape')) {
             return 'vendor-cytoscape';
           }

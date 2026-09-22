@@ -273,7 +273,27 @@ class ProbabilisticResolutionPipeline:
         candidates sorted by confidence score.
         """
         # 1. Forensic stylometric retrieval from indexed signatures
-        attributions = StylometricEngine.attribute_vendor(text, top_k=max(top_k * 3, 10))
+        attributions = StylometricEngine.attribute_vendor(text, top_k=max(top_k * 2, 6))
+        target_map: Dict[str, str] = {attr["vendor"]: attr.get("corpus_sample", "") for attr in attributions}
+
+        # 2. Handle fuzzy retrieval for aliases
+        if alias_hint:
+            norm_hint = NormalizationService.normalize_username_for_fuzzy(alias_hint)
+            from database.repositories.vendor_repo import VendorRepository
+            sample_vendors = VendorRepository.list_cross_market_sample(limit_per_market=50)
+            fuzzy_cands: List[Tuple[float, str, str]] = []
+            for v in sample_vendors:
+                vname = v.get("user_name") or ""
+                if vname and vname not in target_map:
+                    vnorm = NormalizationService.normalize_username_for_fuzzy(vname)
+                    f_res = cls.calculate_username_similarity(norm_hint, vnorm)
+                    f_score = f_res.get("score", 0.0)
+                    if f_score >= 0.60:
+                        fuzzy_cands.append((f_score, vname, v.get("profile_description", "") or vname))
+
+            fuzzy_cands.sort(key=lambda x: x[0], reverse=True)
+            for _, f_vname, f_desc in fuzzy_cands[:5]:
+                target_map[f_vname] = f_desc
 
         candidates: List[Dict[str, Any]] = []
         query_vendor = {
@@ -281,18 +301,17 @@ class ProbabilisticResolutionPipeline:
             "profile_description": text,
         }
 
-        for attr in attributions:
-            target_name = attr["vendor"]
+        for target_name, target_corpus in target_map.items():
             target_vendor = {
                 "user_name": target_name,
-                "profile_description": attr.get("corpus_sample", ""),
+                "profile_description": target_corpus,
             }
 
             eval_res = cls.evaluate_vendor_pair(
                 vendor1=query_vendor,
                 vendor2=target_vendor,
                 text1=text,
-                text2=attr.get("corpus_sample", ""),
+                text2=target_corpus,
                 weights=weights,
             )
 

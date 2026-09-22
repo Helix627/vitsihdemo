@@ -15,7 +15,7 @@ def get_graph():
     Accepts optional start_ts / end_ts UNIX timestamp params for timeline filtering (Phase 4).
     """
     min_confidence = request.args.get("min_confidence", default=0.0, type=float)
-    limit = request.args.get("limit", default=50, type=int)
+    limit = request.args.get("limit", default=25, type=int)
     start_ts = request.args.get("start_ts", default=None, type=int)
     end_ts = request.args.get("end_ts", default=None, type=int)
 

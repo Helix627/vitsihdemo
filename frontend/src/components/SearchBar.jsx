@@ -33,6 +33,9 @@ const SearchBar = ({
     if (item.type === "bitcoin") {
       return item.normalized_value ? `Wallet: ${item.normalized_value}` : "Bitcoin Settlement Address";
     }
+    if (item.type === "monero") return "Monero (XMR) Stealth Address";
+    if (item.type === "telegram") return "Telegram Tag";
+    if (item.type === "discord") return "Discord Tag";
     return "";
   };
 
@@ -55,6 +58,12 @@ const SearchBar = ({
         return "EMAIL";
       case "bitcoin":
         return "BITCOIN";
+      case "monero":
+        return "XMR";
+      case "telegram":
+        return "Telegram";
+      case "discord":
+        return "Discord";
       default:
         return (type || "").toUpperCase();
     }

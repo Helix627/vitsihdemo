@@ -16,7 +16,7 @@ if os.getenv("DB_SSL_CA"):
 elif os.getenv("DB_SSL_VERIFY_IDENTITY", "false").lower() == "true":
     DB_CONFIG["ssl_verify_identity"] = True
 
-VENDOR_LIMIT = int(os.getenv("VENDOR_LIMIT", 50))
+VENDOR_LIMIT = int(os.getenv("VENDOR_LIMIT", 25))
 
 SERVER_HOST = os.getenv("HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("PORT", 5000))

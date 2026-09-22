@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { UploadCloud, PlusCircle, CheckCircle, AlertTriangle, ShieldCheck, Database, FileText, Send, Sparkles } from 'lucide-react';
+
+const noopIcon = () => null;
+const UploadCloud = noopIcon;
+const PlusCircle = noopIcon;
+const CheckCircle = noopIcon;
+const AlertTriangle = noopIcon;
+const ShieldCheck = noopIcon;
+const Database = noopIcon;
+const FileText = noopIcon;
+const Send = noopIcon;
+const Sparkles = noopIcon;
 
 export default function IntelIntakeModal({ isOpen, onClose, onSubmitSuccess }) {
   const [mode, setMode] = useState('single'); // 'single' | 'bulk'

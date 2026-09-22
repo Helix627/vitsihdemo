@@ -24,6 +24,60 @@ class EvolutionEngine:
     """
 
     @classmethod
+    def _format_heuristic_reason(
+        cls,
+        breakdown: Optional[Dict[str, Any]],
+        raw_username: str,
+        target_username: str,
+        conf_pct: float,
+        decision_label: str,
+    ) -> str:
+        """Build a human-readable explanation for a probabilistic suggestion."""
+        if not breakdown:
+            return (
+                f"Probabilistic similarity suggests '{raw_username}' may match '{target_username}' "
+                f"with {conf_pct:.2f}% confidence ({decision_label})."
+            )
+
+        readable = {
+            "username_similarity": "username similarity",
+            "alias_similarity": "alias similarity",
+            "email_similarity": "email similarity",
+            "wallet_similarity": "wallet or payment identifier match",
+            "bitcoin_similarity": "Bitcoin address correlation",
+            "monero_similarity": "Monero address correlation",
+            "pgp_similarity": "PGP fingerprint alignment",
+            "telegram_similarity": "Telegram handle similarity",
+            "discord_similarity": "Discord handle similarity",
+            "forum_similarity": "forum handle consistency",
+            "description_similarity": "behavioral text similarity",
+            "linguistic_similarity": "linguistic style similarity",
+            "graph_similarity": "graph-topology overlap",
+        }
+
+        reasons = []
+        for key, value in breakdown.items():
+            try:
+                score = float(value)
+            except (TypeError, ValueError):
+                continue
+            if score <= 0:
+                continue
+            label = readable.get(key, key.replace("_", " "))
+            reasons.append(f"{label}={score:.2f}")
+
+        if reasons:
+            return (
+                f"Probabilistic review suggests '{raw_username}' may correspond to '{target_username}' "
+                f"({decision_label}; {conf_pct:.2f}% confidence). Key signals: {', '.join(reasons)}."
+            )
+
+        return (
+            f"Probabilistic review suggests '{raw_username}' may correspond to '{target_username}' "
+            f"({decision_label}; {conf_pct:.2f}% confidence)."
+        )
+
+    @classmethod
     def get_or_create_identity(cls, cursor, itype: str, raw_val: str, norm_val: str) -> int:
         """Fetch or insert atomic identity into `identities` table."""
         norm_clean = (norm_val or "").strip()
@@ -393,6 +447,15 @@ class EvolutionEngine:
             target_vendor = VendorRepository.get_by_username(target_vendor_name)
             target_vid = target_vendor["vendor_id"] if target_vendor else None
 
+            breakdown_dict = best_match.get("breakdown", {})
+            heuristic_reason = cls._format_heuristic_reason(
+                breakdown=breakdown_dict,
+                raw_username=raw_username,
+                target_username=target_vendor_name,
+                conf_pct=best_match["confidence_percentage"],
+                decision_label=decision_label,
+            )
+
             # 2. Store or update suggestion in `identity_suggestions`
             with get_db_cursor() as cursor:
                 cursor.execute(
@@ -417,8 +480,8 @@ class EvolutionEngine:
                         (
                             best_conf,
                             decision_label,
-                            json.dumps(best_match.get("breakdown", {})),
-                            f"Multi-attribute similarity: {best_match['confidence_percentage']}% ({decision_label})",
+                            json.dumps(breakdown_dict),
+                            heuristic_reason,
                             suggestion_id,
                         ),
                     )
@@ -437,8 +500,8 @@ class EvolutionEngine:
                             target_vendor_name,
                             best_conf,
                             decision_label,
-                            json.dumps(best_match.get("breakdown", {})),
-                            f"Multi-attribute similarity: {best_match['confidence_percentage']}% ({decision_label})",
+                            json.dumps(breakdown_dict),
+                            heuristic_reason,
                         ),
                     )
                     suggestion_id = cursor.lastrowid

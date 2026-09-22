@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react";
 
 import ExportModal from "./components/ExportModal";
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
+
+const GraphView3D = lazy(() => import("./components/GraphView3D"));
 import AnalystReviewPanel from "./components/AnalystReviewPanel";
-import InfrastructureDashboard from "./components/InfrastructureDashboard";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
@@ -100,6 +101,8 @@ function App() {
   const [focusRequest, setFocusRequest] = useState(null);
   const [theme, setTheme] = useState("dark");
   const [cy, setCy] = useState(null);
+  const [graphMode, setGraphMode] = useState("2d");
+  const [fg3d, setFg3d] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
   // Phase 4: Timeline
   const [timeRange, setTimeRange] = useState([null, null]);
@@ -154,7 +157,7 @@ function App() {
     const [startTs, endTs] = timeRange;
     try {
       const [graphData, statsData, suggData] = await Promise.all([
-        fetchGraph(60, 0.0, startTs, endTs),
+        fetchGraph(25, 0.0, startTs, endTs),
         fetchStats(),
         fetch("/api/v1/identity/suggestions").then((r) => r.json()).catch(() => ({ suggestions: [] })),
       ]);
@@ -173,7 +176,7 @@ function App() {
   const handleTimelineChange = useCallback(async (startTs, endTs) => {
     setTimeRange([startTs, endTs]);
     try {
-      const graphData = await fetchGraph(60, 0.0, startTs, endTs);
+      const graphData = await fetchGraph(25, 0.0, startTs, endTs);
       setGraph(graphData);
     } catch (err) {
       console.error("Timeline graph reload failed:", err);
@@ -223,8 +226,30 @@ function App() {
           ...item,
           type: "bitcoin",
         }));
+        const xmrItems = (result.monero_wallets || []).map((item) => ({
+          ...item,
+          type: "monero",
+        }));
+        const tgItems = (result.telegram_handles || []).map((item) => ({
+          ...item,
+          type: "telegram",
+        }));
+        const dcItems = (result.discord_handles || []).map((item) => ({
+          ...item,
+          type: "discord",
+        }));
 
-        setSuggestions([...vendorItems, ...aliasItems, ...userItems, ...pgpItems, ...emailItems, ...btcItems]);
+        setSuggestions([
+          ...vendorItems,
+          ...aliasItems,
+          ...userItems,
+          ...pgpItems,
+          ...emailItems,
+          ...btcItems,
+          ...xmrItems,
+          ...tgItems,
+          ...dcItems,
+        ]);
       } catch {
         setSuggestions([]);
       } finally {
@@ -304,6 +329,10 @@ function App() {
   };
 
   const handleFit = () => {
+    if (graphMode === "3d" && fg3d) {
+      fg3d.zoomToFit(800, 50);
+      return;
+    }
     if (cy) {
       cy.resize();
       cy.stop(true, true);
@@ -362,6 +391,8 @@ function App() {
         onTimelineChange={handleTimelineChange}
         timeRange={timeRange}
         onNewSuggestion={loadData}
+        graphMode={graphMode}
+        onGraphModeChange={setGraphMode}
       />
 
       {/* Phase 5 — Export Modal */}
@@ -394,16 +425,56 @@ function App() {
           }}
         >
           <section className="graph-panel fade-in">
-            <GraphView
-              graph={graph}
-              layout={layout}
-              confidenceThreshold={confidenceThreshold}
-              onNodeClick={fetchNodeDetails}
-              onCyReady={setCy}
-              selectedNodeId={selectedNodeId}
-              focusRequest={focusRequest}
-              theme={theme}
-            />
+            {graphMode === "2d" ? (
+              <GraphView
+                graph={graph}
+                layout={layout}
+                confidenceThreshold={confidenceThreshold}
+                onNodeClick={fetchNodeDetails}
+                onCyReady={setCy}
+                selectedNodeId={selectedNodeId}
+                focusRequest={focusRequest}
+                theme={theme}
+              />
+            ) : (
+              <Suspense
+                fallback={
+                  <div
+                    style={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "12px",
+                      color: "var(--brand-purple)",
+                    }}
+                  >
+                    <div className="spinner" />
+                    <p style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}>
+                      🌌 Initializing 3D Cosmos Engine...
+                    </p>
+                  </div>
+                }
+              >
+                <GraphView3D
+                  graph={graph}
+                  confidenceThreshold={confidenceThreshold}
+                  onNodeClick={(node) => {
+                    if (!node) {
+                      setSelectedNodeId("");
+                      setSelectedData(null);
+                      return;
+                    }
+                    fetchNodeDetails(node);
+                  }}
+                  selectedNodeId={selectedNodeId}
+                  focusRequest={focusRequest}
+                  theme={theme}
+                  onFgReady={setFg3d}
+                />
+              </Suspense>
+            )}
           </section>
 
           {/* Drag Resizer Bar */}
@@ -425,26 +496,6 @@ function App() {
               onSetSidebarWidth={setSidebarWidth}
             />
           </div>
-        </main>
-      )}
-
-      {activeTab === "infrastructure" && (
-        <main className="analyzer-view-wrap fade-in">
-          <InfrastructureDashboard
-            onSelectVendor={(v) => {
-              setActiveTab("graph");
-              handleSuggestionSelect({ label: v, id: v, type: "vendor" });
-            }}
-            onViewInGraph={async (nodeId, vendorName) => {
-              setActiveTab("graph");
-              if (vendorName) {
-                handleSuggestionSelect({ label: vendorName, id: nodeId, type: "onion" });
-              } else {
-                setFocusRequest({ id: nodeId, time: Date.now() });
-              }
-            }}
-            onRefreshGraph={() => loadData()}
-          />
         </main>
       )}
 

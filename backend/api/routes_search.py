@@ -9,10 +9,20 @@ search_bp = Blueprint("search_bp", __name__)
 
 @search_bp.route("/search", methods=["GET"])
 def search_entities():
-    """Global search across vendors, aliases, usernames, PGP keys, emails, and bitcoin wallets."""
+    """Global search across vendors, aliases, usernames, PGP keys, emails, crypto wallets, and social tags."""
     query = request.args.get("q", "").strip()
     if not query:
-        return jsonify({"aliases": [], "vendors": [], "usernames": [], "pgp_keys": [], "emails": [], "bitcoin_wallets": []})
+        return jsonify({
+            "vendors": [],
+            "aliases": [],
+            "usernames": [],
+            "pgp_keys": [],
+            "emails": [],
+            "bitcoin_wallets": [],
+            "monero_wallets": [],
+            "telegram_handles": [],
+            "discord_handles": [],
+        })
 
     limit = request.args.get("limit", default=10, type=int)
 
@@ -21,7 +31,10 @@ def search_entities():
     usernames = IdentityRepository.search_identities(query, identity_type="username", limit=limit)
     pgp_keys = IdentityRepository.search_identities(query, identity_type="pgp", limit=limit)
     emails = IdentityRepository.search_identities(query, identity_type="email", limit=limit)
-    wallets = IdentityRepository.search_identities(query, identity_type="bitcoin", limit=limit)
+    btc_wallets = IdentityRepository.search_identities(query, identity_type="bitcoin", limit=limit)
+    xmr_wallets = IdentityRepository.search_identities(query, identity_type="monero", limit=limit)
+    telegram = IdentityRepository.search_identities(query, identity_type="telegram", limit=limit)
+    discord = IdentityRepository.search_identities(query, identity_type="discord", limit=limit)
 
     # Consolidate vendor personas by normalized username across all marketplaces
     grouped_vendors = {}
@@ -121,6 +134,10 @@ def search_entities():
             "usernames": [{"id": f"ident_{u['identity_id']}", "identity_id": u["identity_id"], "label": u["value"], "type": "username", "normalized_value": u["normalized_value"], "detail_url": f"/identity/{u['identity_id']}"} for u in usernames],
             "pgp_keys": [{"id": f"ident_{p['identity_id']}", "identity_id": p["identity_id"], "label": f"{p['value'][:12]}...{p['value'][-8:]}", "type": "pgp", "normalized_value": p["normalized_value"], "detail_url": f"/identity/{p['identity_id']}"} for p in pgp_keys],
             "emails": [{"id": f"ident_{e['identity_id']}", "identity_id": e["identity_id"], "label": e["value"], "type": "email", "normalized_value": e["normalized_value"], "detail_url": f"/identity/{e['identity_id']}"} for e in emails],
-            "bitcoin_wallets": [{"id": f"ident_{w['identity_id']}", "identity_id": w["identity_id"], "label": w["value"], "type": "bitcoin", "normalized_value": w["normalized_value"], "detail_url": f"/identity/{w['identity_id']}"} for w in wallets],
+            "bitcoin_wallets": [{"id": f"ident_{w['identity_id']}", "identity_id": w["identity_id"], "label": w["value"], "type": "bitcoin", "normalized_value": w["normalized_value"], "detail_url": f"/identity/{w['identity_id']}"} for w in btc_wallets],
+            "monero_wallets": [{"id": f"ident_{x['identity_id']}", "identity_id": x["identity_id"], "label": f"{x['value'][:12]}...{x['value'][-8:]}", "type": "monero", "normalized_value": x["normalized_value"], "detail_url": f"/identity/{x['identity_id']}"} for x in xmr_wallets],
+            "telegram_handles": [{"id": f"ident_{t['identity_id']}", "identity_id": t["identity_id"], "label": t["value"], "type": "telegram", "normalized_value": t["normalized_value"], "detail_url": f"/identity/{t['identity_id']}"} for t in telegram],
+            "discord_handles": [{"id": f"ident_{d['identity_id']}", "identity_id": d["identity_id"], "label": d["value"], "type": "discord", "normalized_value": d["normalized_value"], "detail_url": f"/identity/{d['identity_id']}"} for d in discord],
         }
     )
+

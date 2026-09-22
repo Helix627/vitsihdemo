@@ -17,6 +17,8 @@ const Topbar = ({
   onTimelineChange,
   timeRange,
   onNewSuggestion,
+  graphMode = "2d",
+  onGraphModeChange,
 }) => {
   const [showTimeline, setShowTimeline] = useState(false);
 
@@ -45,15 +47,7 @@ const Topbar = ({
             className={`tab-btn ${activeTab === "graph" ? "active" : ""}`}
             onClick={() => onTabChange("graph")}
           >
-            🌐 Relationship Graph
-          </button>
-
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === "infrastructure" ? "active" : ""}`}
-            onClick={() => onTabChange("infrastructure")}
-          >
-            🛡️ Tor Infrastructure &amp; Attribution
+            Relationship Graph
           </button>
 
           <button
@@ -61,7 +55,7 @@ const Topbar = ({
             className={`tab-btn ${activeTab === "review" ? "active" : ""}`}
             onClick={() => onTabChange("review")}
           >
-            ⚖️ Review Suggestions
+            Review Suggestions
             {pendingSuggestionsCount > 0 && (
               <span className="pending-badge">{pendingSuggestionsCount}</span>
             )}
@@ -72,7 +66,7 @@ const Topbar = ({
             className={`tab-btn ${activeTab === "analyzer" ? "active" : ""}`}
             onClick={() => onTabChange("analyzer")}
           >
-            📥 Intelligence Studio
+            Intelligence Studio
           </button>
 
           <button
@@ -81,7 +75,7 @@ const Topbar = ({
             onClick={onOpenExport}
             title="Export CSV, JSON, or PDF Dossier"
           >
-            ⬇️ Export
+            Export
           </button>
         </div>
 
@@ -92,6 +86,26 @@ const Topbar = ({
 
           {activeTab === "graph" && (
             <>
+              {/* 2D / 3D Dimension Mode Switcher */}
+              <div className="graph-mode-toggle" role="group" aria-label="Graph Dimensions">
+                <button
+                  type="button"
+                  className={`btn-mode-pill ${graphMode === "2d" ? "active" : ""}`}
+                  onClick={() => onGraphModeChange("2d")}
+                  title="Switch to 2D Planar Layout (Cytoscape)"
+                >
+                  2D
+                </button>
+                <button
+                  type="button"
+                  className={`btn-mode-pill ${graphMode === "3d" ? "active" : ""}`}
+                  onClick={() => onGraphModeChange("3d")}
+                  title="Switch to 3D Force-Directed Cosmos (Three.js)"
+                >
+                  3D
+                </button>
+              </div>
+
               {/* Timeline Toggle Button */}
               {onTimelineChange && (
                 <button
@@ -100,22 +114,24 @@ const Topbar = ({
                   onClick={() => setShowTimeline((prev) => !prev)}
                   title="Toggle 2014-2015 Monthly Darknet Era Timeline Analysis"
                 >
-                  📅 Timeline {showTimeline ? "▴" : "▾"}
+                  Timeline {showTimeline ? "▴" : "▾"}
                 </button>
               )}
 
-              <select
-                className="layout-select"
-                value={layout}
-                onChange={(event) => onLayoutChange(event.target.value)}
-                aria-label="Select graph layout"
-              >
-                <option value="cose">cose (force-directed)</option>
-                <option value="concentric">concentric (hierarchical)</option>
-                <option value="breadthfirst">breadthfirst</option>
-                <option value="circle">circle</option>
-                <option value="grid">grid</option>
-              </select>
+              {graphMode === "2d" && (
+                <select
+                  className="layout-select"
+                  value={layout}
+                  onChange={(event) => onLayoutChange(event.target.value)}
+                  aria-label="Select graph layout"
+                >
+                  <option value="cose">cose (force-directed)</option>
+                  <option value="concentric">concentric (hierarchical)</option>
+                  <option value="breadthfirst">breadthfirst</option>
+                  <option value="circle">circle</option>
+                  <option value="grid">grid</option>
+                </select>
+              )}
 
               <button className="btn primary" onClick={onRefresh} type="button">
                 ⚡ Refresh
@@ -124,7 +140,7 @@ const Topbar = ({
           )}
 
           <button className="btn btn-theme-toggle" onClick={onThemeToggle} type="button">
-            {theme === "light" ? "🌙 Dark" : "☀️ Light"}
+            {theme === "light" ? "Dark" : "Light"}
           </button>
         </div>
       </div>

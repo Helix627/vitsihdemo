@@ -408,6 +408,7 @@ class StylometricEngine:
                     "confidence_percentage": round(composite * 100, 1),
                     "listing_count": profile["listing_count"],
                     "tfidf_score": round(s_tfidf, 4),
+                    "corpus_sample": profile.get("corpus_sample", ""),
                 })
 
         scored.sort(key=lambda x: (x["tfidf_score"], x["confidence_score"]), reverse=True)

@@ -58,7 +58,7 @@ class NetworkXGraphEngine:
     }
 
     _GRAPH: Optional[nx.Graph] = None
-    _ACTIVE_VENDOR_LIMIT: int = 60
+    _ACTIVE_VENDOR_LIMIT: int = 25
     _START_TS: Optional[int] = None
     _END_TS: Optional[int] = None
 
@@ -91,7 +91,7 @@ class NetworkXGraphEngine:
     @classmethod
     def build_graph(
         cls,
-        vendor_limit: int = 60,
+        vendor_limit: int = 25,
         marketplace_filter: Optional[str] = None,
         start_ts: Optional[int] = None,
         end_ts: Optional[int] = None,
@@ -151,6 +151,7 @@ class NetworkXGraphEngine:
             v_name = v.get("user_name") or f"Vendor #{v_id}"
             m_id = v.get("market_id") or 1
             mkt_target = cls._get_or_create_market_node(G, m_id)
+            mkt_label = "ShadowBay" if m_id == 101 else ("NightMarket" if m_id == 102 else "Agora")
 
             G.add_node(
                 node_id,
