@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import AutonomousTicker from "./AutonomousTicker";
+import { Search, Bell, Moon, Sun } from "lucide-react";
 import TimelineSlider from "./TimelineSlider";
+
+const NAV_ITEMS = [
+  { key: "overview", label: "Overview" },
+  { key: "graph", label: "Relationship Graph" },
+  { key: "analyzer", label: "Intelligence" },
+  { key: "review", label: "Review" },
+];
 
 const Topbar = ({
   activeTab,
@@ -21,78 +28,58 @@ const Topbar = ({
   onGraphModeChange,
 }) => {
   const [showTimeline, setShowTimeline] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   return (
     <header className="topbar">
       <div className="topbar-main-row">
         {/* Brand Area */}
-        <div className="topbar-brand" onClick={() => onTabChange("graph")} style={{ cursor: "pointer" }}>
+        <div className="topbar-brand" onClick={() => onTabChange("overview")} style={{ cursor: "pointer" }}>
           <div className="brand-logo-container">
             <img src="/onion_logo.png" alt="Onion Slayer Logo" className="brand-logo-img" />
-            <div className="brand-logo-glow" />
           </div>
           <div className="brand-text-container">
-            <div className="brand-title-line">
-              <h1 className="brand-name">Onion Slayer</h1>
-              <span className="brand-badge-pill">CTI ATTRIBUTION</span>
-            </div>
-            <p className="brand-tagline">UNMASKING THREATS. SECURING TOMORROW.</p>
+            <h1 className="brand-name">Onion Slayer</h1>
+            <p className="brand-tagline">THREAT INTELLIGENCE PLATFORM</p>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="topbar-tabs">
+        {/* Center Navigation */}
+        <nav className="topbar-nav">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={`nav-link ${activeTab === item.key ? "active" : ""}`}
+              onClick={() => onTabChange(item.key)}
+            >
+              {item.label}
+              {item.key === "review" && pendingSuggestionsCount > 0 && (
+                <span className="nav-badge">{pendingSuggestionsCount}</span>
+              )}
+            </button>
+          ))}
           <button
             type="button"
-            className={`tab-btn ${activeTab === "graph" ? "active" : ""}`}
-            onClick={() => onTabChange("graph")}
-          >
-            Relationship Graph
-          </button>
-
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === "review" ? "active" : ""}`}
-            onClick={() => onTabChange("review")}
-          >
-            Review Suggestions
-            {pendingSuggestionsCount > 0 && (
-              <span className="pending-badge">{pendingSuggestionsCount}</span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === "analyzer" ? "active" : ""}`}
-            onClick={() => onTabChange("analyzer")}
-          >
-            Intelligence Studio
-          </button>
-
-          <button
-            type="button"
-            className="tab-btn tab-btn-export"
+            className="nav-link nav-link-export"
             onClick={onOpenExport}
             title="Export CSV, JSON, or PDF Dossier"
           >
-            Export
+            Reports
           </button>
-        </div>
+        </nav>
 
         {/* Right Controls */}
         <div className="topbar-controls">
-          {/* Autonomous Ingestion Daemon Widget */}
-          <AutonomousTicker onNewSuggestion={onNewSuggestion} />
-
           {activeTab === "graph" && (
             <>
-              {/* 2D / 3D Dimension Mode Switcher */}
+              {/* 2D / 3D Mode Switcher */}
               <div className="graph-mode-toggle" role="group" aria-label="Graph Dimensions">
                 <button
                   type="button"
                   className={`btn-mode-pill ${graphMode === "2d" ? "active" : ""}`}
                   onClick={() => onGraphModeChange("2d")}
-                  title="Switch to 2D Planar Layout (Cytoscape)"
+                  title="2D Planar Layout"
                 >
                   2D
                 </button>
@@ -100,19 +87,19 @@ const Topbar = ({
                   type="button"
                   className={`btn-mode-pill ${graphMode === "3d" ? "active" : ""}`}
                   onClick={() => onGraphModeChange("3d")}
-                  title="Switch to 3D Force-Directed Cosmos (Three.js)"
+                  title="3D Force-Directed"
                 >
                   3D
                 </button>
               </div>
 
-              {/* Timeline Toggle Button */}
+              {/* Timeline Toggle */}
               {onTimelineChange && (
                 <button
                   type="button"
-                  className={`btn btn-timeline-toggle ${showTimeline ? "active" : ""}`}
+                  className={`btn-icon ${showTimeline ? "active" : ""}`}
                   onClick={() => setShowTimeline((prev) => !prev)}
-                  title="Toggle 2014-2015 Monthly Darknet Era Timeline Analysis"
+                  title="Toggle Timeline Analysis"
                 >
                   Timeline {showTimeline ? "▴" : "▾"}
                 </button>
@@ -125,23 +112,39 @@ const Topbar = ({
                   onChange={(event) => onLayoutChange(event.target.value)}
                   aria-label="Select graph layout"
                 >
-                  <option value="cose">cose (force-directed)</option>
-                  <option value="concentric">concentric (hierarchical)</option>
-                  <option value="breadthfirst">breadthfirst</option>
-                  <option value="circle">circle</option>
-                  <option value="grid">grid</option>
+                  <option value="cose">Force-directed</option>
+                  <option value="concentric">Concentric</option>
+                  <option value="breadthfirst">Breadthfirst</option>
+                  <option value="circle">Circle</option>
+                  <option value="grid">Grid</option>
                 </select>
               )}
 
-              <button className="btn primary" onClick={onRefresh} type="button">
-                ⚡ Refresh
+              <button className="btn-icon" onClick={onRefresh} type="button" title="Refresh Graph">
+                ⚡
               </button>
             </>
           )}
 
-          <button className="btn btn-theme-toggle" onClick={onThemeToggle} type="button">
-            {theme === "light" ? "Dark" : "Light"}
+          {/* Search icon */}
+          <button
+            className="btn-icon"
+            type="button"
+            title="Search"
+            onClick={() => setSearchExpanded(!searchExpanded)}
+          >
+            <Search size={16} />
           </button>
+
+          {/* Theme Toggle */}
+          <button className="btn-icon" onClick={onThemeToggle} type="button" title="Toggle theme">
+            {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+
+          {/* User Avatar */}
+          <div className="user-avatar" title="User Profile">
+            AK
+          </div>
         </div>
       </div>
 

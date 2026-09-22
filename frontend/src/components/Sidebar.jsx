@@ -28,7 +28,7 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
       {/* 1. Global Network Summary */}
       <section className="panel">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <h2 style={{ margin: 0 }}>📊 Intelligence Metrics</h2>
+          <h2 style={{ margin: 0 }}>Intelligence Metrics</h2>
           {onSetSidebarWidth && (
             <div style={{ display: "flex", gap: "4px" }}>
               <button
@@ -64,7 +64,7 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
 
       {/* 2. Selected Entity Inspector */}
       <section className="panel">
-        <h2>🔍 Persona Inspector</h2>
+        <h2>Persona Inspector</h2>
         {selectedData ? (
           <div className="detail-lines">
             {vendor && (
@@ -306,7 +306,7 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
 
       {/* 3. Visual Legend */}
       <section className="panel">
-        <h2>🏷️ Visual Legend</h2>
+        <h2>Visual Legend</h2>
         
         <div style={{ marginBottom: "10px" }}>
           <p style={{ margin: "0 0 6px", fontSize: "0.74rem", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase" }}>

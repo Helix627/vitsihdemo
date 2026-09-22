@@ -105,7 +105,7 @@ const TimelineSlider = ({ onRangeChange, timeRange }) => {
       <div className="timeline-header">
         <div className="timeline-title-area">
           <span className="timeline-label">
-            📅 Monthly Threat Activity Timeline (2014–2015)
+            Monthly Threat Activity Timeline (2014–2015)
           </span>
           <span className="timeline-badge">
             {startLabel} → {endLabel}
@@ -121,7 +121,7 @@ const TimelineSlider = ({ onRangeChange, timeRange }) => {
             onClick={handleApply}
             type="button"
           >
-            ✓ Apply Window
+            Apply Window
           </button>
           {active && (
             <button
@@ -129,7 +129,7 @@ const TimelineSlider = ({ onRangeChange, timeRange }) => {
               onClick={handleClear}
               type="button"
             >
-              × Reset
+              Reset
             </button>
           )}
         </div>
@@ -143,28 +143,28 @@ const TimelineSlider = ({ onRangeChange, timeRange }) => {
           className="preset-chip"
           onClick={() => applyPreset("2014-01", "2015-12")}
         >
-          🌐 Full Darknet Era (2014–2015)
+          Full Darknet Era (2014–2015)
         </button>
         <button
           type="button"
           className="preset-chip"
           onClick={() => applyPreset("2014-05", "2014-12")}
         >
-          🚀 Early Market Inception (May–Dec '14)
+          Early Market Inception (May–Dec '14)
         </button>
         <button
           type="button"
           className="preset-chip"
           onClick={() => applyPreset("2015-01", "2015-08")}
         >
-          🔥 Peak Multi-Market Trading (Jan–Aug '15)
+          Peak Multi-Market Trading (Jan–Aug '15)
         </button>
         <button
           type="button"
           className="preset-chip"
           onClick={() => applyPreset("2015-09", "2015-12")}
         >
-          🔄 Cross-Market Migration (Sep–Dec '15)
+          Cross-Market Migration (Sep–Dec '15)
         </button>
       </div>
 
@@ -226,7 +226,7 @@ const TimelineSlider = ({ onRangeChange, timeRange }) => {
       {/* Boundary Labels */}
       <div className="timeline-labels">
         <span>Jan 2014 (Market Inception)</span>
-        <span className="timeline-hint">💡 Drag handles or click any month bar to slice the knowledge graph</span>
+        <span className="timeline-hint">Drag handles or click any month bar to slice the knowledge graph</span>
         <span>Dec 2015 (Cross-Market Evolution)</span>
       </div>
     </div>

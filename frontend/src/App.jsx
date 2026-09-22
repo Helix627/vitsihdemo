@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react";
 
+import CoverPage from "./components/CoverPage";
 import ExportModal from "./components/ExportModal";
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
@@ -86,7 +87,7 @@ const computeGraphMetrics = (graph, minConfidence = 0.0) => {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState("graph");
+  const [activeTab, setActiveTab] = useState("overview");
   const [graph, setGraph] = useState(emptyGraph);
   const [stats, setStats] = useState(DEFAULT_STATS);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -189,6 +190,8 @@ function App() {
 
   useEffect(() => {
     document.body.classList.toggle("dark", theme === "dark");
+    document.body.classList.toggle("light", theme === "light");
+    document.body.dataset.theme = theme;
   }, [theme]);
 
   useEffect(() => {
@@ -403,6 +406,14 @@ function App() {
         graphData={graph}
         stats={stats}
       />
+
+      {/* Overview / Landing Page */}
+      {activeTab === "overview" && (
+        <CoverPage
+          onBeginInvestigation={() => setActiveTab("graph")}
+          theme={theme}
+        />
+      )}
 
       {activeTab === "graph" && (
         <SearchBar

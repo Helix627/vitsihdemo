@@ -190,12 +190,12 @@ const GraphView3D = ({
       if (node.__ringMesh) {
         node.__ringMesh.visible = isSelected;
         if (isSelected) {
-          node.__ringMesh.material.color.setHex(0xa855f7);
+          node.__ringMesh.material.color.setHex(0x2a5ce6);
         }
       }
       if (node.__sprite) {
         node.__sprite.textHeight = isSelected ? 4.2 : 3.0;
-        node.__sprite.borderColor = isSelected ? "#a855f7" : node.color;
+        node.__sprite.borderColor = isSelected ? "#2a5ce6" : node.color;
         node.__sprite.borderWidth = isSelected ? 1.4 : 0.8;
       }
     });
@@ -312,7 +312,7 @@ const GraphView3D = ({
         prevNode.__sphereMesh.scale.set(r, r, r);
         if (prevNode.__ringMesh) {
           prevNode.__ringMesh.visible = isSelected;
-          if (isSelected) prevNode.__ringMesh.material.color.setHex(0xa855f7);
+          if (isSelected) prevNode.__ringMesh.material.color.setHex(0x2a5ce6);
         }
       }
 
@@ -320,7 +320,7 @@ const GraphView3D = ({
         const r = (node.radius || 4.5) * 1.35;
         node.__sphereMesh.scale.set(r, r, r);
         if (node.__ringMesh) {
-          node.__ringMesh.material.color.setHex(0x38bdf8);
+          node.__ringMesh.material.color.setHex(0x2a5ce6);
           node.__ringMesh.visible = true;
         }
       }
@@ -378,7 +378,7 @@ const GraphView3D = ({
         width={dimensions.width}
         height={dimensions.height}
         graphData={graphData}
-        backgroundColor={isDark ? "#090d16" : "#f1f5f9"}
+        backgroundColor={isDark ? "#0a1628" : "#f5f0eb"}
         showNavInfo={false}
         // Nodes
         nodeThreeObject={nodeThreeObject}

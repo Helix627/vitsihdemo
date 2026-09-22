@@ -1,17 +1,18 @@
 import React from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
-const Loading = ({ message = "Deciphering Darknet Infrastructure & Actor Graphs...", error, onRetry }) => {
+const Loading = ({ message = "Deciphering Intelligence...", error, onRetry }) => {
   if (error) {
     return (
       <div className="loading-screen">
         <div className="error-card">
-          <div className="loading-logo-wrap">
-            <img src="/onion_logo.png" alt="Onion Slayer" className="loading-logo error-logo" />
+          <div className="loading-logo-wrap error-icon">
+            <AlertCircle size={48} color="#ef4444" strokeWidth={1.5} />
           </div>
-          <h2>Cannot connect to CTI backend</h2>
+          <h2 style={{ fontFamily: "var(--font-heading)" }}>Connection Failed</h2>
           <p>{error}</p>
-          <button className="btn primary" onClick={onRetry} type="button">
-            ⚡ Retry Connection
+          <button className="btn primary" onClick={onRetry} type="button" style={{ marginTop: "16px" }}>
+            Retry Connection
           </button>
         </div>
       </div>
@@ -22,16 +23,11 @@ const Loading = ({ message = "Deciphering Darknet Infrastructure & Actor Graphs.
     <div className="loading-screen">
       <div className="loading-card">
         <div className="loading-logo-wrap">
-          <div className="radar-pulse-ring ring-1" />
-          <div className="radar-pulse-ring ring-2" />
-          <img src="/onion_logo.png" alt="Onion Slayer" className="loading-logo pulse-anim" />
+          <Loader2 className="spinner-icon" size={42} color="var(--accent)" strokeWidth={1.5} />
         </div>
         <div className="loading-brand-text">
-          <h1 className="loading-title">ONION SLAYER</h1>
-          <p className="loading-tagline">UNMASKING THREATS. SECURING TOMORROW.</p>
-        </div>
-        <div className="loading-status-bar">
-          <div className="loading-progress-line" />
+          <h1 className="loading-title" style={{ fontFamily: "var(--font-heading)" }}>ONION SLAYER</h1>
+          <p className="loading-tagline">THREAT INTELLIGENCE PLATFORM</p>
         </div>
         <p className="loading-message">{message}</p>
       </div>

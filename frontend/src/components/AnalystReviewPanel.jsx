@@ -122,8 +122,7 @@ export default function AnalystReviewPanel({
       style={{
         background: 'var(--bg-secondary)',
         border: '1px solid var(--border-soft)',
-        borderRadius: '18px',
-        boxShadow: 'var(--shadow-soft)',
+        borderRadius: 'var(--radius-lg)',
         padding: '24px',
         color: 'var(--text-primary)',
         width: '100%',
@@ -150,13 +149,13 @@ export default function AnalystReviewPanel({
             style={{
               width: '46px',
               height: '46px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.05))',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-soft)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#f59e0b',
+              color: 'var(--text-primary)',
             }}
           >
             <GitMerge style={{ width: '22px', height: '22px' }} />
@@ -166,7 +165,7 @@ export default function AnalystReviewPanel({
               style={{
                 margin: 0,
                 fontSize: '1.25rem',
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: 'var(--font-heading)',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
@@ -179,11 +178,11 @@ export default function AnalystReviewPanel({
                   fontSize: '0.72rem',
                   padding: '3px 10px',
                   borderRadius: '20px',
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  color: '#f59e0b',
-                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  background: 'var(--bg-primary)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-soft)',
                   fontWeight: 600,
-                  fontFamily: 'monospace',
+                  fontFamily: 'var(--font-mono)',
                 }}
               >
                 {suggestions.length} In Queue
@@ -210,15 +209,15 @@ export default function AnalystReviewPanel({
               gap: '6px',
               background: 'var(--bg-primary)',
               padding: '6px 12px',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-soft)',
               fontSize: '0.75rem',
               fontWeight: 600,
             }}
           >
-            <span style={{ color: '#10b981' }}>●</span> {highConfCount} High (≥80%)
+            <span style={{ color: 'var(--brand-emerald)' }}>●</span> {highConfCount} High (≥80%)
             <span style={{ color: 'var(--border-soft)', margin: '0 4px' }}>|</span>
-            <span style={{ color: '#f59e0b' }}>●</span> {modConfCount} Moderate (60-79%)
+            <span style={{ color: 'var(--brand-amber)' }}>●</span> {modConfCount} Moderate (60-79%)
           </div>
 
           <button
@@ -437,11 +436,10 @@ export default function AnalystReviewPanel({
               style={{
                 background: 'var(--bg-primary)',
                 border: isHigh
-                  ? '1px solid rgba(245, 158, 11, 0.4)'
+                  ? '1px solid var(--brand-amber)'
                   : '1px solid var(--border-soft)',
-                borderRadius: '14px',
+                borderRadius: 'var(--radius-md)',
                 padding: '20px',
-                boxShadow: 'var(--shadow-soft)',
                 transition: 'border-color 0.2s ease, transform 0.2s ease',
               }}
             >
@@ -473,11 +471,11 @@ export default function AnalystReviewPanel({
                       gap: '8px',
                       background: 'var(--bg-secondary)',
                       padding: '8px 14px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--border-soft)',
                     }}
                   >
-                    <User style={{ width: '16px', height: '16px', color: '#06b6d4' }} />
+                    <User style={{ width: '16px', height: '16px', color: 'var(--brand-cyan)' }} />
                     <div>
                       <span
                         style={{
@@ -493,10 +491,10 @@ export default function AnalystReviewPanel({
                       </span>
                       <span
                         style={{
-                          fontFamily: 'monospace',
+                          fontFamily: 'var(--font-mono)',
                           fontWeight: 700,
                           fontSize: '0.92rem',
-                          color: '#06b6d4',
+                          color: 'var(--brand-cyan)',
                         }}
                       >
                         {s.source_username}
@@ -517,13 +515,13 @@ export default function AnalystReviewPanel({
                       style={{
                         width: '18px',
                         height: '18px',
-                        color: isHigh ? '#f59e0b' : 'var(--text-secondary)',
+                        color: isHigh ? 'var(--brand-amber)' : 'var(--text-secondary)',
                       }}
                     />
                     <span
                       style={{
                         fontSize: '0.62rem',
-                        fontFamily: 'monospace',
+                        fontFamily: 'var(--font-mono)',
                         color: 'var(--text-secondary)',
                         fontWeight: 600,
                       }}
@@ -539,11 +537,11 @@ export default function AnalystReviewPanel({
                       gap: '8px',
                       background: 'var(--bg-secondary)',
                       padding: '8px 14px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--border-soft)',
                     }}
                   >
-                    <User style={{ width: '16px', height: '16px', color: '#a855f7' }} />
+                    <User style={{ width: '16px', height: '16px', color: 'var(--brand-purple)' }} />
                     <div>
                       <span
                         style={{
@@ -559,10 +557,10 @@ export default function AnalystReviewPanel({
                       </span>
                       <span
                         style={{
-                          fontFamily: 'monospace',
+                          fontFamily: 'var(--font-mono)',
                           fontWeight: 700,
                           fontSize: '0.92rem',
-                          color: '#a855f7',
+                          color: 'var(--brand-purple)',
                         }}
                       >
                         {s.target_username}
@@ -592,10 +590,10 @@ export default function AnalystReviewPanel({
                     </span>
                     <span
                       style={{
-                        fontFamily: 'monospace',
+                        fontFamily: 'var(--font-mono)',
                         fontSize: '1.25rem',
                         fontWeight: 800,
-                        color: isHigh ? '#f59e0b' : '#06b6d4',
+                        color: isHigh ? 'var(--brand-amber)' : 'var(--brand-cyan)',
                       }}
                     >
                       {confPct}% Confidence
@@ -606,9 +604,8 @@ export default function AnalystReviewPanel({
                       width: '6px',
                       height: '38px',
                       borderRadius: '4px',
-                      background: isHigh
-                        ? 'linear-gradient(to bottom, #f59e0b, #d97706)'
-                        : 'linear-gradient(to bottom, #06b6d4, #0284c7)',
+                      background: isHigh ? 'var(--brand-amber)' : 'var(--brand-cyan)',
+                      opacity: 0.8
                     }}
                   />
                 </div>
@@ -620,7 +617,7 @@ export default function AnalystReviewPanel({
                   style={{
                     margin: '14px 0 10px',
                     padding: '8px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-soft)',
                     fontSize: '0.78rem',
@@ -630,7 +627,7 @@ export default function AnalystReviewPanel({
                     gap: '8px',
                   }}
                 >
-                  <Sparkles style={{ width: '14px', height: '14px', color: '#f59e0b', flexShrink: 0 }} />
+                  <Sparkles style={{ width: '14px', height: '14px', color: 'var(--brand-amber)', flexShrink: 0 }} />
                   <span>
                     <strong style={{ color: 'var(--text-primary)' }}>Heuristic Reason:</strong>{' '}
                     {s.suggested_reason}
@@ -652,7 +649,7 @@ export default function AnalystReviewPanel({
                   style={{
                     background: 'var(--bg-secondary)',
                     padding: '10px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-soft)',
                   }}
                 >
@@ -675,7 +672,7 @@ export default function AnalystReviewPanel({
                     >
                       Handle Fuzzy Match
                     </span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.8rem' }}>
                       {usernameSim}%
                     </span>
                   </div>
@@ -691,7 +688,7 @@ export default function AnalystReviewPanel({
                       style={{
                         height: '100%',
                         width: `${usernameSim}%`,
-                        background: '#06b6d4',
+                        background: 'var(--brand-cyan)',
                         borderRadius: '2px',
                       }}
                     />
@@ -703,7 +700,7 @@ export default function AnalystReviewPanel({
                   style={{
                     background: 'var(--bg-secondary)',
                     padding: '10px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-soft)',
                   }}
                 >
@@ -726,7 +723,7 @@ export default function AnalystReviewPanel({
                     >
                       Behavioral Heuristics
                     </span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.8rem' }}>
                       {behaviorSim}%
                     </span>
                   </div>
@@ -742,7 +739,7 @@ export default function AnalystReviewPanel({
                       style={{
                         height: '100%',
                         width: `${behaviorSim}%`,
-                        background: '#10b981',
+                        background: 'var(--brand-emerald)',
                         borderRadius: '2px',
                       }}
                     />
@@ -754,7 +751,7 @@ export default function AnalystReviewPanel({
                   style={{
                     background: 'var(--bg-secondary)',
                     padding: '10px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-soft)',
                   }}
                 >
@@ -777,7 +774,7 @@ export default function AnalystReviewPanel({
                     >
                       Stylometric Vector (11-d)
                     </span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.8rem' }}>
                       {stylometrySim}%
                     </span>
                   </div>
@@ -793,19 +790,19 @@ export default function AnalystReviewPanel({
                       style={{
                         height: '100%',
                         width: `${stylometrySim}%`,
-                        background: '#a855f7',
+                        background: 'var(--brand-purple)',
                         borderRadius: '2px',
                       }}
                     />
                   </div>
                 </div>
 
-                {/* Stage 4: Embeddings */}
+                {/* Stage 5: Embeddings */}
                 <div
                   style={{
                     background: 'var(--bg-secondary)',
                     padding: '10px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-soft)',
                   }}
                 >
@@ -828,7 +825,7 @@ export default function AnalystReviewPanel({
                     >
                       Neural Embeddings (384-d)
                     </span>
-                    <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.8rem' }}>
                       {embeddingSim}%
                     </span>
                   </div>
@@ -844,7 +841,7 @@ export default function AnalystReviewPanel({
                       style={{
                         height: '100%',
                         width: `${embeddingSim}%`,
-                        background: '#3b82f6',
+                        background: 'var(--accent)',
                         borderRadius: '2px',
                       }}
                     />
@@ -870,7 +867,7 @@ export default function AnalystReviewPanel({
                     flex: '1 1 300px',
                     background: 'var(--bg-secondary)',
                     padding: '6px 12px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-soft)',
                   }}
                 >
@@ -896,6 +893,7 @@ export default function AnalystReviewPanel({
                       color: 'var(--text-primary)',
                       fontSize: '0.82rem',
                       width: '100%',
+                      fontFamily: 'var(--font-body)',
                     }}
                   />
                 </div>
@@ -916,9 +914,9 @@ export default function AnalystReviewPanel({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      color: '#ef4444',
-                      borderColor: 'rgba(239, 68, 68, 0.3)',
-                      background: 'rgba(239, 68, 68, 0.06)',
+                      color: 'var(--brand-rose)',
+                      borderColor: 'transparent',
+                      background: 'rgba(225, 29, 72, 0.08)',
                       fontSize: '0.82rem',
                       padding: '8px 16px',
                     }}
@@ -936,12 +934,12 @@ export default function AnalystReviewPanel({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      background: 'var(--brand-emerald)',
                       color: '#ffffff',
                       borderColor: 'transparent',
                       fontSize: '0.82rem',
                       padding: '8px 18px',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                      fontFamily: 'var(--font-body)',
                     }}
                   >
                     <Check style={{ width: '14px', height: '14px' }} />
