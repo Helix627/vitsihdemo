@@ -7,6 +7,9 @@ const NAV_ITEMS = [
   { key: "graph", label: "Relationship Graph" },
   { key: "analyzer", label: "Intelligence" },
   { key: "review", label: "Review" },
+  { key: "infra", label: "Infrastructure" },
+  { key: "timeline", label: "Timeline" },
+  { key: "exports", label: "Exports" },
 ];
 
 const Topbar = ({
@@ -51,26 +54,27 @@ const Topbar = ({
               key={item.key}
               type="button"
               className={`nav-link ${activeTab === item.key ? "active" : ""}`}
-              onClick={() => onTabChange(item.key)}
+              onClick={() => {
+                if (item.key === "exports") {
+                  onOpenExport();
+                } else {
+                  onTabChange(item.key);
+                }
+              }}
             >
               {item.label}
-              {item.key === "review" && pendingSuggestionsCount > 0 && (
-                <span className="nav-badge">{pendingSuggestionsCount}</span>
-              )}
             </button>
           ))}
-          <button
-            type="button"
-            className="nav-link nav-link-export"
-            onClick={onOpenExport}
-            title="Export CSV, JSON, or PDF Dossier"
-          >
-            Reports
-          </button>
         </nav>
 
         {/* Right Controls */}
         <div className="topbar-controls">
+          {/* Search Bar */}
+          <div className="topbar-search">
+            <Search size={14} />
+            <input placeholder="Search identities, wallets, PGP, domains..." />
+          </div>
+
           {activeTab === "graph" && (
             <>
               {/* 2D / 3D Mode Switcher */}
@@ -92,18 +96,6 @@ const Topbar = ({
                   3D
                 </button>
               </div>
-
-              {/* Timeline Toggle */}
-              {onTimelineChange && (
-                <button
-                  type="button"
-                  className={`btn-icon ${showTimeline ? "active" : ""}`}
-                  onClick={() => setShowTimeline((prev) => !prev)}
-                  title="Toggle Timeline Analysis"
-                >
-                  Timeline {showTimeline ? "▴" : "▾"}
-                </button>
-              )}
 
               {graphMode === "2d" && (
                 <select
@@ -127,23 +119,18 @@ const Topbar = ({
           )}
 
           {/* Search icon */}
-          <button
-            className="btn-icon"
-            type="button"
-            title="Search"
-            onClick={() => setSearchExpanded(!searchExpanded)}
-          >
+          <button className="btn-icon" type="button" title="Search">
             <Search size={16} />
           </button>
 
           {/* Theme Toggle */}
-          <button className="btn-icon" onClick={onThemeToggle} type="button" title="Toggle theme">
+          <button className="btn-icon" onClick={onThemeToggle} type="button" title="Toggle Theme">
             {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
           </button>
 
           {/* User Avatar */}
           <div className="user-avatar" title="User Profile">
-            AK
+            AS
           </div>
         </div>
       </div>

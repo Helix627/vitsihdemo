@@ -5,28 +5,50 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional
 
+import time
 import mysql.connector
 from config import DB_CONFIG
 from core.logging import logger
 from mysql.connector import errorcode, pooling
 
 _POOL: Optional[pooling.MySQLConnectionPool] = None
+_LAST_CONNECT_FAIL_TIME: float = 0.0
+_CONNECT_COOLDOWN: float = 30.0  # seconds between reconnection attempts if offline
+
+
+def is_db_available() -> bool:
+    global _POOL, _LAST_CONNECT_FAIL_TIME
+    if _POOL is not None:
+        return True
+    if time.time() - _LAST_CONNECT_FAIL_TIME < _CONNECT_COOLDOWN:
+        return False
+    try:
+        init_connection_pool()
+        return True
+    except Exception:
+        return False
 
 
 def init_connection_pool(pool_name: str = "cti_db_pool", pool_size: int = 16) -> pooling.MySQLConnectionPool:
     """Initialize the MySQL connection pool."""
-    global _POOL
+    global _POOL, _LAST_CONNECT_FAIL_TIME
     if _POOL is None:
+        if time.time() - _LAST_CONNECT_FAIL_TIME < _CONNECT_COOLDOWN:
+            raise mysql.connector.Error(msg="MySQL connection pool offline (cooldown active).")
         try:
             logger.info("Initializing MySQL connection pool '%s' (size=%d)...", pool_name, pool_size)
+            config = dict(DB_CONFIG)
+            if "connection_timeout" not in config:
+                config["connection_timeout"] = 2
             _POOL = pooling.MySQLConnectionPool(
                 pool_name=pool_name,
                 pool_size=pool_size,
                 pool_reset_session=True,
-                **DB_CONFIG,
+                **config,
             )
             logger.info("MySQL connection pool initialized successfully.")
-        except mysql.connector.Error as err:
+        except Exception as err:
+            _LAST_CONNECT_FAIL_TIME = time.time()
             logger.error("Failed to initialize MySQL connection pool: %s", err)
             raise
     return _POOL

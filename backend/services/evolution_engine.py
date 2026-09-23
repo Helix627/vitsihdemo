@@ -838,29 +838,33 @@ class EvolutionEngine:
     @classmethod
     def get_pending_suggestions(cls, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
         """Retrieve list of pending suggestions for the Analyst Review Console."""
-        with get_db_cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT s.* FROM identity_suggestions s
-                INNER JOIN (
-                    SELECT MAX(suggestion_id) as max_id
-                    FROM identity_suggestions
-                    WHERE status = 'PENDING'
-                    GROUP BY source_username, target_username
-                ) latest ON s.suggestion_id = latest.max_id
-                ORDER BY s.confidence DESC, s.created_at DESC
-                LIMIT %s OFFSET %s;
-                """,
-                (limit, offset),
-            )
-            rows = cursor.fetchall()
-            for r in rows:
-                if isinstance(r.get("similarity_breakdown"), str):
-                    try:
-                        r["similarity_breakdown"] = json.loads(r["similarity_breakdown"])
-                    except Exception:
-                        pass
-            return rows
+        try:
+            with get_db_cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT s.* FROM identity_suggestions s
+                    INNER JOIN (
+                        SELECT MAX(suggestion_id) as max_id
+                        FROM identity_suggestions
+                        WHERE status = 'PENDING'
+                        GROUP BY source_username, target_username
+                    ) latest ON s.suggestion_id = latest.max_id
+                    ORDER BY s.confidence DESC, s.created_at DESC
+                    LIMIT %s OFFSET %s;
+                    """,
+                    (limit, offset),
+                )
+                rows = cursor.fetchall()
+                for r in rows:
+                    if isinstance(r.get("similarity_breakdown"), str):
+                        try:
+                            r["similarity_breakdown"] = json.loads(r["similarity_breakdown"])
+                        except Exception:
+                            pass
+                return rows
+        except Exception as exc:
+            logger.warning("Could not query pending suggestions from DB: %s", exc)
+            return []
 
     @classmethod
     def get_provenance_for_target(cls, target_type: str, target_id: int) -> List[Dict[str, Any]]:

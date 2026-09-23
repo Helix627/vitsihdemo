@@ -82,27 +82,29 @@ def get_timeline_activity():
     slots = _build_month_slots(2014, 1, 2015, 12)
     slot_map = {s["key"]: s for s in slots}
 
-    # 2. Query monthly counts from MySQL Vendors table
-    with get_db_cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT
-                DATE_FORMAT(FROM_UNIXTIME(added), '%Y-%m') AS ym,
-                COUNT(*) AS vendor_count
-            FROM Vendors
-            WHERE added IS NOT NULL
-              AND added BETWEEN %s AND %s
-            GROUP BY ym
-            ORDER BY ym ASC;
-            """,
-            (DEFAULT_MIN_TS, DEFAULT_MAX_TS),
-        )
-        rows = cursor.fetchall()
-
-    for r in rows:
-        ym = r.get("ym")
-        if ym in slot_map:
-            slot_map[ym]["vendors"] = int(r["vendor_count"])
+    # 2. Query monthly counts from MySQL Vendors table if available
+    try:
+        with get_db_cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    DATE_FORMAT(FROM_UNIXTIME(added), '%Y-%m') AS ym,
+                    COUNT(*) AS vendor_count
+                FROM Vendors
+                WHERE added IS NOT NULL
+                  AND added BETWEEN %s AND %s
+                GROUP BY ym
+                ORDER BY ym ASC;
+                """,
+                (DEFAULT_MIN_TS, DEFAULT_MAX_TS),
+            )
+            rows = cursor.fetchall()
+            for r in rows:
+                ym = r.get("ym")
+                if ym in slot_map:
+                    slot_map[ym]["vendors"] = int(r["vendor_count"])
+    except Exception as exc:
+        logger.warning("Could not query timeline activity from DB: %s", exc)
 
     return jsonify({
         "buckets": slots,

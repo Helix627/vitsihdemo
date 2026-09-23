@@ -10,6 +10,8 @@ import AnalystReviewPanel from "./components/AnalystReviewPanel";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
+import LeftSidebar from "./components/LeftSidebar";
+import RightSidebar from "./components/RightSidebar";
 import Topbar from "./components/Topbar";
 import useDebounce from "./hooks/useDebounce";
 import {
@@ -409,10 +411,16 @@ function App() {
 
       {/* Overview / Landing Page */}
       {activeTab === "overview" && (
-        <CoverPage
-          onBeginInvestigation={() => setActiveTab("graph")}
-          theme={theme}
-        />
+        <main className="dashboard-layout fade-in">
+          <LeftSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+          <section className="dashboard-center">
+            <CoverPage
+              onBeginInvestigation={() => setActiveTab("graph")}
+              theme={theme}
+            />
+          </section>
+          <RightSidebar />
+        </main>
       )}
 
       {activeTab === "graph" && (

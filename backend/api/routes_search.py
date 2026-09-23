@@ -26,15 +26,76 @@ def search_entities():
 
     limit = request.args.get("limit", default=10, type=int)
 
-    vendors = VendorRepository.search_vendors(query, limit=limit * 3)
-    aliases = IdentityRepository.search_identities(query, identity_type="alias", limit=limit)
-    usernames = IdentityRepository.search_identities(query, identity_type="username", limit=limit)
-    pgp_keys = IdentityRepository.search_identities(query, identity_type="pgp", limit=limit)
-    emails = IdentityRepository.search_identities(query, identity_type="email", limit=limit)
-    btc_wallets = IdentityRepository.search_identities(query, identity_type="bitcoin", limit=limit)
-    xmr_wallets = IdentityRepository.search_identities(query, identity_type="monero", limit=limit)
-    telegram = IdentityRepository.search_identities(query, identity_type="telegram", limit=limit)
-    discord = IdentityRepository.search_identities(query, identity_type="discord", limit=limit)
+    vendors = []
+    aliases = []
+    usernames = []
+    pgp_keys = []
+    emails = []
+    btc_wallets = []
+    xmr_wallets = []
+    telegram = []
+    discord = []
+
+    try:
+        vendors = VendorRepository.search_vendors(query, limit=limit * 3)
+        aliases = IdentityRepository.search_identities(query, identity_type="alias", limit=limit)
+        usernames = IdentityRepository.search_identities(query, identity_type="username", limit=limit)
+        pgp_keys = IdentityRepository.search_identities(query, identity_type="pgp", limit=limit)
+        emails = IdentityRepository.search_identities(query, identity_type="email", limit=limit)
+        btc_wallets = IdentityRepository.search_identities(query, identity_type="bitcoin", limit=limit)
+        xmr_wallets = IdentityRepository.search_identities(query, identity_type="monero", limit=limit)
+        telegram = IdentityRepository.search_identities(query, identity_type="telegram", limit=limit)
+        discord = IdentityRepository.search_identities(query, identity_type="discord", limit=limit)
+    except Exception:
+        pass
+
+    # Fallback to search in-memory graph nodes if database returned nothing
+    if not vendors and not aliases and not usernames and not emails:
+        from graph.graph_engine import NetworkXGraphEngine
+        G = NetworkXGraphEngine.get_graph()
+        q_low = query.lower()
+        for nid, nd in G.nodes(data=True):
+            lbl = str(nd.get("label", "")).lower()
+            val = str(nd.get("full_value", "")).lower()
+            norm = str(nd.get("normalized_value", "")).lower()
+            ntype = nd.get("type", "")
+            if q_low in lbl or q_low in val or q_low in norm:
+                if ntype == "vendor" or nid.startswith("vendor_"):
+                    v_id = nd.get("vendor_id") or (int(nid.replace("vendor_", "")) if nid.startswith("vendor_") else 1)
+                    m_id = nd.get("market_id", 1)
+                    vendors.append({
+                        "vendor_id": v_id,
+                        "user_name": nd.get("label", nid),
+                        "market_id": m_id,
+                        "marketplace_name": VendorRepository.MARKET_NAMES.get(m_id, "Darknet Market"),
+                    })
+                else:
+                    try:
+                        i_id = nd.get("identity_id") or (int(nid.replace("ident_", "")) if nid.startswith("ident_") else abs(hash(nid)) % 100000)
+                    except Exception:
+                        i_id = abs(hash(nid)) % 100000
+                    item_dict = {
+                        "identity_id": i_id,
+                        "identity_type": ntype,
+                        "value": nd.get("full_value", nd.get("label", nid)),
+                        "normalized_value": nd.get("normalized_value", nd.get("label", nid)),
+                    }
+                    if ntype == "alias":
+                        aliases.append(item_dict)
+                    elif ntype == "email":
+                        emails.append(item_dict)
+                    elif ntype == "bitcoin":
+                        btc_wallets.append(item_dict)
+                    elif ntype == "monero":
+                        xmr_wallets.append(item_dict)
+                    elif ntype == "pgp":
+                        pgp_keys.append(item_dict)
+                    elif ntype == "telegram":
+                        telegram.append(item_dict)
+                    elif ntype == "discord":
+                        discord.append(item_dict)
+                    elif ntype == "username":
+                        usernames.append(item_dict)
 
     # Consolidate vendor personas by normalized username across all marketplaces
     grouped_vendors = {}
