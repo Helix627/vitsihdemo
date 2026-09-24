@@ -8,7 +8,6 @@ const NAV_ITEMS = [
   { key: "analyzer", label: "Intelligence" },
   { key: "review", label: "Review" },
   { key: "infra", label: "Infrastructure" },
-  { key: "timeline", label: "Timeline" },
   { key: "exports", label: "Exports" },
 ];
 

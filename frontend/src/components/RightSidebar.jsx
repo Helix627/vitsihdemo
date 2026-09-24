@@ -11,7 +11,7 @@ const RightSidebar = () => {
           <span className="kpi-label">Total Entities</span>
         </div>
         <div className="kpi-row">
-          <span className="kpi-number">1,284</span>
+          <span className="kpi-number">235</span>
           <span className="kpi-change up">↑ 12%</span>
         </div>
         <span className="kpi-sub">vs. last 7 days</span>
@@ -24,7 +24,7 @@ const RightSidebar = () => {
           <span className="kpi-label">Resolved Relationships</span>
         </div>
         <div className="kpi-row">
-          <span className="kpi-number">342</span>
+          <span className="kpi-number">582</span>
           <span className="kpi-change up">↑ 8%</span>
         </div>
         <span className="kpi-sub">vs. last 7 days</span>
@@ -70,7 +70,7 @@ const RightSidebar = () => {
                 <span className="activity-text-main">New relationship detected</span>
                 <span className="activity-time">12m ago</span>
               </div>
-              <span className="activity-text-sub">MagicHat → Agora</span>
+              <span className="activity-text-sub">ShadowOps_Vortex ? ShadowOps Dark Market</span>
             </div>
           </div>
           <div className="activity-item">
@@ -80,17 +80,17 @@ const RightSidebar = () => {
                 <span className="activity-text-main">Entity enriched</span>
                 <span className="activity-time">18m ago</span>
               </div>
-              <span className="activity-text-sub">btc_wallet_3f4...9a2</span>
+              <span className="activity-text-sub">ShadowOps_Vortex</span>
             </div>
           </div>
           <div className="activity-item">
             <div className="activity-dot orange" />
             <div className="activity-body">
               <div className="activity-body-row">
-                <span className="activity-text-main">New infrastructure found</span>
+                <span className="activity-text-main">New infrastructure correlation found</span>
                 <span className="activity-time">32m ago</span>
               </div>
-              <span className="activity-text-sub">185.199.108.12</span>
+              <span className="activity-text-sub">ShadowOps Market Mirror</span>
             </div>
           </div>
           <div className="activity-item">
@@ -100,7 +100,7 @@ const RightSidebar = () => {
                 <span className="activity-text-main">Review suggestion</span>
                 <span className="activity-time">1h ago</span>
               </div>
-              <span className="activity-text-sub">Possible link: MagicHat & ShadowBay</span>
+              <span className="activity-text-sub">ShadowOps_Vortex ? existing actor cluster</span>
             </div>
           </div>
           <div className="activity-item">
@@ -110,7 +110,7 @@ const RightSidebar = () => {
                 <span className="activity-text-main">Export completed</span>
                 <span className="activity-time">2h ago</span>
               </div>
-              <span className="activity-text-sub">MLAT package (Case #OS-2025-041)</span>
+              <span className="activity-text-sub">CTI package</span>
             </div>
           </div>
         </div>

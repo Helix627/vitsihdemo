@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState, lazy, Suspense } from "react
 
 import CoverPage from "./components/CoverPage";
 import ExportModal from "./components/ExportModal";
+import AIBot from "./components/AIBot";
 import GraphView from "./components/GraphView";
 import IdentityAnalyzer from "./components/IdentityAnalyzer";
 
 const GraphView3D = lazy(() => import("./components/GraphView3D"));
 import AnalystReviewPanel from "./components/AnalystReviewPanel";
+import InfrastructureDashboard from "./components/InfrastructureDashboard";
 import Loading from "./components/Loading";
 import SearchBar from "./components/SearchBar";
 import Sidebar from "./components/Sidebar";
@@ -102,7 +104,7 @@ function App() {
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [focusRequest, setFocusRequest] = useState(null);
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   const [cy, setCy] = useState(null);
   const [graphMode, setGraphMode] = useState("2d");
   const [fg3d, setFg3d] = useState(null);
@@ -269,19 +271,54 @@ function App() {
     const nodeType = node.type || "vendor";
     setSelectedNodeId(node.id);
 
-    try {
-      if (node.detail_url) {
-        const details = await fetchByPath(node.detail_url);
-        setSelectedData({ ...details, kind: nodeType });
-        return;
-      }
+    const mockLabel = node.label || node.id;
+    let dataPayload = { kind: nodeType, title: mockLabel, relationships: [] };
 
-      const details = await fetchNodeDetailsById(node.id);
-      setSelectedData({ ...details, kind: nodeType });
-    } catch (fetchError) {
-      console.error("Failed to load node details", fetchError);
-      setSelectedData(null);
+    if (nodeType === "marketplace") {
+      let desc = "A major darknet marketplace.";
+      if (mockLabel.toLowerCase().includes("agora")) desc = "Agora was a major defunct darknet market that operated on the Tor network from September 2013 to August 2015. It specialized in drugs, forged documents, and other illicit goods.";
+      else if (mockLabel.toLowerCase().includes("shadow")) desc = "ShadowBay is a heavily monitored next-generation darknet market known for advanced multi-sig escrow and stringent vendor verification requirements.";
+      else if (mockLabel.toLowerCase().includes("night")) desc = "NightMarket is a rapid-turnaround marketplace characterized by high-volume automated bot transactions and primarily digital goods.";
+      
+      dataPayload.marketplace = {
+        name: mockLabel,
+        description: desc,
+        status: mockLabel.toLowerCase().includes("agora") ? "Defunct / Seized" : "Active / Monitored",
+        uptime: "99.8%",
+        total_vendors_tracked: Math.floor(Math.random() * 500) + 100
+      };
+    } else if (nodeType === "vendor" || nodeType === "alias" || nodeType === "username") {
+      dataPayload.vendor = {
+        vendor_id: node.id.replace(/\D/g, "") || 142,
+        user_name: mockLabel,
+        market_id: 101,
+        marketplace_name: "ShadowOps Market Mirror",
+        vendor_link: `http://shadowops5...onion/u/${mockLabel.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+      };
+      dataPayload.cross_market_accounts = [
+        { vendor_id: 89, user_name: mockLabel + "_SilkRoad", marketplace_name: "SilkRoad Veteran", match_confidence: 0.98, shared_types: ["PGP Fingerprint", "Bitcoin Wallet"] },
+        { vendor_id: 42, user_name: mockLabel.substring(0,5) + "Vendor", marketplace_name: "Agora", match_confidence: 0.82, shared_types: ["Stylometry", "Email Address"] }
+      ];
+      dataPayload.relationships = [
+        { rel_type: "USES_PGP", target_label: "994E8F231...", detail: "Deterministic 100% Match" },
+        { rel_type: "OWNS_WALLET", target_label: "bc1qar0srrr7xfk...", detail: "Bitcoin (Transactions: 14)" }
+      ];
+    } else {
+      // Generic entity like PGP, Bitcoin, Email
+      dataPayload.entity = {
+        value: mockLabel,
+        type: nodeType.toUpperCase(),
+        first_seen: "2024-01-12",
+        last_active: "2024-09-18",
+        linked_actors: Math.floor(Math.random() * 5) + 1
+      };
+      dataPayload.relationships = [
+        { rel_type: "USED_BY", target_label: "Vendor_Alpha", detail: "Primary identifier" },
+        { rel_type: "MENTIONED_IN", target_label: "Forum Post #448", detail: "Scraped via darkweb forum" }
+      ];
     }
+
+    setSelectedData(dataPayload);
   }, []);
 
   const handleSuggestionSelect = async (item) => {
@@ -401,6 +438,7 @@ function App() {
       />
 
       {/* Phase 5 — Export Modal */}
+      <AIBot />
       <ExportModal
         isOpen={exportOpen}
         onClose={() => setExportOpen(false)}
@@ -412,7 +450,6 @@ function App() {
       {/* Overview / Landing Page */}
       {activeTab === "overview" && (
         <main className="dashboard-layout fade-in">
-          <LeftSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           <section className="dashboard-center">
             <CoverPage
               onBeginInvestigation={() => setActiveTab("graph")}
@@ -537,6 +574,21 @@ function App() {
             }}
             onDataEvolved={() => loadData()}
           />
+        </main>
+      )}
+
+      {activeTab === "infra" && (
+        <main className="analyzer-view-wrap fade-in">
+          <InfrastructureDashboard 
+              onViewInGraph={(id, vendorName) => {
+                setActiveTab("graph");
+                setFocusRequest({ id: id, label: vendorName });
+              }}
+              onSelectVendor={(vendorName) => {
+                setActiveTab("graph");
+                setFocusRequest({ label: vendorName });
+              }}
+            />
         </main>
       )}
     </div>

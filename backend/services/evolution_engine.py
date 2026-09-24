@@ -978,26 +978,29 @@ class EvolutionEngine:
         matched_id_type = ""
         matched_id_val = ""
 
-        with get_db_cursor() as cursor:
-            for itype, norm_val, raw_val in candidate_checks:
-                cursor.execute(
-                    """
-                    SELECT i.identity_id, i.identity_type, i.normalized_value, v.vendor_id, v.user_name AS vendor_name
-                    FROM identities i
-                    JOIN vendoridentitymap vim ON i.identity_id = vim.identity_id
-                    JOIN Vendors v ON vim.vendor_id = v.vendor_id
-                    WHERE i.normalized_value = %s
-                    LIMIT 1;
-                    """,
-                    (norm_val,),
-                )
-                row = cursor.fetchone()
-                if row:
-                    matched_vendor_id = row["vendor_id"]
-                    target_vendor_name = row["vendor_name"]
-                    matched_id_type = itype.upper()
-                    matched_id_val = raw_val
-                    break
+        try:
+            with get_db_cursor() as cursor:
+                for itype, norm_val, raw_val in candidate_checks:
+                    cursor.execute(
+                        """
+                        SELECT i.identity_id, i.identity_type, i.normalized_value, v.vendor_id, v.user_name AS vendor_name
+                        FROM identities i
+                        JOIN vendoridentitymap vim ON i.identity_id = vim.identity_id
+                        JOIN Vendors v ON vim.vendor_id = v.vendor_id
+                        WHERE i.normalized_value = %s
+                        LIMIT 1;
+                        """,
+                        (norm_val,),
+                    )
+                    row = cursor.fetchone()
+                    if row:
+                        matched_vendor_id = row["vendor_id"]
+                        target_vendor_name = row["vendor_name"]
+                        matched_id_type = itype.upper()
+                        matched_id_val = raw_val
+                        break
+        except Exception as e:
+            logger.error("DB offline or error during deterministic check: %s", e)
 
         if matched_vendor_id:
             linking_forecast = {
@@ -1015,33 +1018,36 @@ class EvolutionEngine:
         else:
             # 1. Check Fuzzy Username Matching against existing Vendors in DB
             fuzzy_match_found = False
-            with get_db_cursor() as cursor:
-                cursor.execute("SELECT vendor_id, user_name FROM Vendors WHERE user_name IS NOT NULL LIMIT 2000;")
-                all_vendors = cursor.fetchall()
-                best_fuzzy_score = 0.0
-                best_fuzzy_vendor = None
+            try:
+                with get_db_cursor() as cursor:
+                    cursor.execute("SELECT vendor_id, user_name FROM Vendors WHERE user_name IS NOT NULL LIMIT 2000;")
+                    all_vendors = cursor.fetchall()
+                    best_fuzzy_score = 0.0
+                    best_fuzzy_vendor = None
 
-                for v_row in all_vendors:
-                    cand_name = v_row["user_name"]
-                    cand_norm = NormalizationService.normalize_username_for_fuzzy(cand_name)
-                    f_res = ProbabilisticResolutionPipeline.calculate_username_similarity(fuzzy_norm_username, cand_norm)
-                    score = f_res.get("score", 0.0)
-                    if score > best_fuzzy_score:
-                        best_fuzzy_score = score
-                        best_fuzzy_vendor = v_row
+                    for v_row in all_vendors:
+                        cand_name = v_row["user_name"]
+                        cand_norm = NormalizationService.normalize_username_for_fuzzy(cand_name)
+                        f_res = ProbabilisticResolutionPipeline.calculate_username_similarity(fuzzy_norm_username, cand_norm)
+                        score = f_res.get("score", 0.0)
+                        if score > best_fuzzy_score:
+                            best_fuzzy_score = score
+                            best_fuzzy_vendor = v_row
 
-                if best_fuzzy_vendor and best_fuzzy_score >= 0.60:
-                    conf = round(best_fuzzy_score * 100, 1)
-                    linking_forecast = {
-                        "action": "SUGGESTION",
-                        "forecast_type": "probabilistic",
-                        "target_vendor_id": best_fuzzy_vendor["vendor_id"],
-                        "target_vendor_name": best_fuzzy_vendor["user_name"],
-                        "confidence_percentage": conf,
-                        "matched_identifier": {"type": "FUZZY_USERNAME", "value": best_fuzzy_vendor["user_name"]},
-                        "explanation": f"Fuzzy handle similarity detected with Vendor #{best_fuzzy_vendor['vendor_id']} ({best_fuzzy_vendor['user_name']}) at {conf}% confidence. Ingesting will create a review suggestion in the Analyst Review Queue.",
-                    }
-                    fuzzy_match_found = True
+                    if best_fuzzy_vendor and best_fuzzy_score >= 0.60:
+                        conf = round(best_fuzzy_score * 100, 1)
+                        linking_forecast = {
+                            "action": "SUGGESTION",
+                            "forecast_type": "probabilistic",
+                            "target_vendor_id": best_fuzzy_vendor["vendor_id"],
+                            "target_vendor_name": best_fuzzy_vendor["user_name"],
+                            "confidence_percentage": conf,
+                            "matched_identifier": {"type": "FUZZY_USERNAME", "value": best_fuzzy_vendor["user_name"]},
+                            "explanation": f"Fuzzy handle similarity detected with Vendor #{best_fuzzy_vendor['vendor_id']} ({best_fuzzy_vendor['user_name']}) at {conf}% confidence. Ingesting will create a review suggestion in the Analyst Review Queue.",
+                        }
+                        fuzzy_match_found = True
+            except Exception as e:
+                logger.error("DB offline or error during fuzzy check: %s", e)
 
             if not fuzzy_match_found:
                 # 2. Check stylometric similarity

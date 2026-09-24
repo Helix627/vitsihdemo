@@ -1050,44 +1050,57 @@ export default function IdentityAnalyzer({ onSelectVendor, onDataEvolved }) {
                   Extracted Identity Elements:
                 </h4>
                 <div className="item-badge-list">
-                  {(report.extracted_entities?.emails || []).map((e, i) => (
-                    <span key={i} className="item-badge">
-                      📧 {e}
-                    </span>
-                  ))}
-                  {(report.extracted_entities?.bitcoin_wallets || []).map(
-                    (b, i) => (
+                    {(report.extracted_entities?.username || []).map((u, i) => (
                       <span key={i} className="item-badge">
-                        ₿ {b}
+                        ALIAS: {u}
                       </span>
-                    )
-                  )}
-                  {(report.extracted_entities?.monero_wallets || []).map(
-                    (x, i) => (
+                    ))}
+                    {(report.extracted_entities?.emails || []).map((e, i) => (
                       <span key={i} className="item-badge">
-                        ɱ {x.slice(0, 12)}...
+                        EMAIL: {e}
                       </span>
-                    )
-                  )}
-                  {(report.extracted_entities?.pgp_fingerprints || []).map(
-                    (p, i) => (
-                      <span key={i} className="item-badge">
-                        🔑 {p.slice(0, 16)}...
+                    ))}
+                    {(report.extracted_entities?.bitcoin_wallets || []).map(
+                      (b, i) => (
+                        <span key={i} className="item-badge">
+                          BTC: {b}
+                        </span>
+                      )
+                    )}
+                    {(report.extracted_entities?.monero_wallets || []).map(
+                      (x, i) => (
+                        <span key={i} className="item-badge">
+                          XMR: {x.slice(0, 12)}...
+                        </span>
+                      )
+                    )}
+                    {(report.extracted_entities?.pgp_fingerprints || []).map(
+                      (p, i) => (
+                        <span key={i} className="item-badge">
+                          PGP: {p.slice(0, 16)}...
+                        </span>
+                      )
+                    )}
+                    {(report.extracted_entities?.telegram || []).map(
+                      (t, i) => (
+                        <span key={i} className="item-badge">
+                          TG: {t}
+                        </span>
+                      )
+                    )}
+                    {(report.extracted_entities?.discord || []).map(
+                      (d, i) => (
+                        <span key={i} className="item-badge">
+                          DISCORD: {d}
+                        </span>
+                      )
+                    )}
+                    {(report.extracted_entities?.credentials || []).map((c, i) => (
+                      <span key={i} className="item-badge" style={{ borderColor: "#ef4444" }}>
+                        CRED: {c}
                       </span>
-                    )
-                  )}
-                  {(report.extracted_entities?.credentials || []).map(
-                    (c, i) => (
-                      <span
-                        key={i}
-                        className="item-badge"
-                        style={{ borderColor: "#ef4444" }}
-                      >
-                        🔒 {c}
-                      </span>
-                    )
-                  )}
-                </div>
+                    ))}
+                  </div>
               </div>
 
               <div className="panel">
@@ -2226,6 +2239,17 @@ export default function IdentityAnalyzer({ onSelectVendor, onDataEvolved }) {
                           <div style={{ color: "#94a3b8", fontSize: "0.74rem", marginTop: "3px", lineHeight: "1.4" }}>
                             {rp.linking_forecast.explanation}
                           </div>
+                          {rp.extracted && (
+                            <div className="item-badge-list" style={{ marginTop: "8px" }}>
+                              {rp.extracted.username && <span className="item-badge">ALIAS: {rp.extracted.username}</span>}
+                              {rp.extracted.email && <span className="item-badge">EMAIL: {rp.extracted.email}</span>}
+                              {rp.extracted.bitcoin && <span className="item-badge">BTC: {rp.extracted.bitcoin}</span>}
+                              {rp.extracted.monero && <span className="item-badge">XMR: {rp.extracted.monero.substring(0,12)}...</span>}
+                              {rp.extracted.pgp && <span className="item-badge">PGP: {rp.extracted.pgp.substring(0,16)}...</span>}
+                              {rp.extracted.telegram && <span className="item-badge">TG: {rp.extracted.telegram}</span>}
+                              {rp.extracted.discord && <span className="item-badge">DISCORD: {rp.extracted.discord}</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
 

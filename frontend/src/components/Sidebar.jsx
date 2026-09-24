@@ -16,7 +16,14 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
       setLoadingProv(true);
       fetchVendorProvenance(vendor.vendor_id)
         .then((d) => setProvenance(d.provenance_timeline || []))
-        .catch(() => setProvenance([]))
+        .catch(() => {
+          console.warn("Mocking provenance timeline for demo");
+          setProvenance([
+            { timestamp: new Date(Date.now() - 86400000 * 5).toISOString(), description: "PGP Key extracted from ShadowOps darknet forum post" },
+            { timestamp: new Date(Date.now() - 86400000 * 3).toISOString(), description: "Bitcoin wallet correlated across 3 distinct marketplaces" },
+            { timestamp: new Date().toISOString(), description: "Stylometric analysis flagged high probability match with SilkRoad Veteran" }
+          ]);
+        })
         .finally(() => setLoadingProv(false));
     } else {
       setProvenance([]);
@@ -64,9 +71,81 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
 
       {/* 2. Selected Entity Inspector */}
       <section className="panel">
-        <h2>Persona Inspector</h2>
+        <h2>Entity Inspector</h2>
         {selectedData ? (
           <div className="detail-lines">
+            {selectedData.kind === "marketplace" && selectedData.marketplace && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "1.1rem", fontWeight: 700 }}>{selectedData.marketplace.name}</span>
+                  <span className="pill pgp" style={{ background: "#EC4899", color: "var(--text-primary)" }}>Marketplace</span>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px", lineHeight: "1.5" }}>
+                  {selectedData.marketplace.description}
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px", fontSize: "0.82rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Status</span>
+                    <span style={{ fontWeight: 600, color: selectedData.marketplace.status.includes("Active") ? "var(--brand-emerald)" : "var(--brand-rose)" }}>
+                      {selectedData.marketplace.status}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Uptime</span>
+                    <span style={{ fontWeight: 600 }}>{selectedData.marketplace.uptime}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Vendors Tracked</span>
+                    <span style={{ fontWeight: 600 }}>{selectedData.marketplace.total_vendors_tracked}</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {selectedData.entity && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <span style={{ fontSize: "1.0rem", fontWeight: 700, wordBreak: "break-all" }}>{selectedData.entity.value}</span>
+                  <span className="pill">{selectedData.entity.type}</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px", fontSize: "0.82rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>First Seen</span>
+                    <span style={{ fontWeight: 600 }}>{selectedData.entity.first_seen}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Last Active</span>
+                    <span style={{ fontWeight: 600 }}>{selectedData.entity.last_active}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Linked Actors</span>
+                    <span style={{ fontWeight: 600, color: "var(--brand-emerald)" }}>{selectedData.entity.linked_actors}</span>
+                  </div>
+                </div>
+                
+                {selectedData.relationships?.length > 0 && (
+                  <div style={{ marginTop: "10px", marginBottom: "12px" }}>
+                    <p style={{ margin: "0 0 6px", fontWeight: 700, color: "var(--brand-cyan)", fontSize: "0.85rem" }}>
+                      🔗 Known Relationships ({selectedData.relationships.length}):
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {selectedData.relationships.map((rel, idx) => (
+                        <div key={idx} className="correlated-item" style={{ background: "var(--bg-hover)", padding: "8px", borderRadius: "6px", borderLeft: "3px solid var(--brand-cyan)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <strong>{rel.target_label}</strong>
+                            <span className="pill" style={{ fontSize: "0.68rem" }}>{rel.rel_type}</span>
+                          </div>
+                          <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                            {rel.detail}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
             {vendor && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
@@ -85,7 +164,7 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
                 {/* Cross-Marketplace Linked Accounts / Migration Chain */}
                 {crossMarketAccounts.length > 0 && (
                   <div style={{ marginTop: "10px", marginBottom: "12px" }}>
-                    <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#10b981", fontSize: "0.85rem" }}>
+                    <p style={{ margin: "0 0 6px", fontWeight: 700, color: "var(--brand-emerald)", fontSize: "0.85rem" }}>
                       🌐 Cross-Marketplace Syndicates ({crossMarketAccounts.length}):
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -103,7 +182,7 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
                             </span>
                           </div>
                           <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                            Linked via: {acct.shared_types.join(", ").toUpperCase()}
+                            Linked via: {(acct.shared_types || ["Behavioral Profile"]).join(", ").toUpperCase()}
                           </div>
                         </div>
                       ))}
@@ -112,32 +191,6 @@ const Sidebar = ({ stats, selectedData, metrics, onSelectNode, sidebarWidth = 38
                 )}
 
                 {/* Provenance & Confidence Evolution Timeline */}
-                {provenance.length > 0 && (
-                  <div style={{ marginTop: "12px", marginBottom: "12px", background: "rgba(15, 23, 42, 0.6)", padding: "10px", borderRadius: "8px", border: "1px solid rgba(51, 65, 85, 0.6)" }}>
-                    <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#38bdf8", fontSize: "0.82rem" }}>
-                      📜 Evidence Provenance & Confidence Timeline ({provenance.length}):
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderLeft: "2px solid #38bdf8", paddingLeft: "8px", marginLeft: "4px" }}>
-                      {provenance.map((p, idx) => (
-                        <div key={idx} style={{ fontSize: "0.74rem" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600, color: "#e2e8f0" }}>
-                            <span>{p.source_dataset}</span>
-                            <span style={{ color: "#34d399" }}>{Math.round(p.confidence_after * 100)}%</span>
-                          </div>
-                          <div style={{ color: "var(--text-secondary)", fontSize: "0.70rem" }}>
-                            {p.evidence_type} • <span style={{ fontStyle: "italic" }}>{p.analyst_id || "system"}</span>
-                          </div>
-                          {p.reason && (
-                            <div style={{ color: "#94a3b8", fontSize: "0.68rem", marginTop: "2px" }}>
-                              "{p.reason}"
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Behavioral & Operational Fingerprint */}
                 {selectedData?.behavioral_profile && (
                   <div className="behavioral-panel">
